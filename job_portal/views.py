@@ -1309,28 +1309,32 @@ def jobs_by_company(request):
         sort_order = request.GET.get('sort_order')
         job_status = request.GET.get('job_status')  
 
-        if not company_name:
-            return JsonResponse({'error': 'Company name parameter is required'}, status=400)
+        if not (company_name or sort_order or job_status):
+            return JsonResponse({'error': 'Select at least one parameter'}, status=400)
 
-        company = get_object_or_404(Company, name=company_name)
-
-        jobs = Job.objects.filter(company=company)
-
+        if company_name:
+            company = get_object_or_404(Company, name=company_name)
+            jobs = Job.objects.filter(company=company)
+        else:
+            jobs = Job.objects.all()
+        
         if job_status:
+         if job_status:
             if job_status.lower() == 'active':
                 jobs = jobs.filter(job_status='active')
             elif job_status.lower() == 'closed':
                 jobs = jobs.filter(job_status='closed')
             else:
                 return JsonResponse({'error': 'Invalid job status'}, status=400)
-
-        if sort_order == 'latest':
-            jobs = jobs.order_by('-published_at')
-        elif sort_order == 'oldest':
-            jobs = jobs.order_by('published_at')
-        else:
-            return JsonResponse({'error': 'Invalid sort order'}, status=400)
-
+        
+        if sort_order:
+            if sort_order == 'latest':
+                jobs = jobs.order_by('-published_at')
+            elif sort_order == 'oldest':
+                jobs = jobs.order_by('published_at')
+            else:
+                return JsonResponse({'error': 'Invalid sort order'}, status=400)
+            
         jobs_list = [{
             'id': job.id,
             'job_title': job.job_title,

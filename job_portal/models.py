@@ -159,25 +159,29 @@ class Publications(models.Model):
 
 
 class CandidateStatus_selected(models.Model):
-    candidate_name = models.CharField(max_length=255)
+    first_name = models.CharField(max_length=255,default='John')
+    last_name = models.CharField(max_length=255,default='Doe')
     status = models.CharField(max_length=20,default='selected')
     company_name = models.CharField(max_length=255)
     job_id = models.IntegerField()
 
 class CandidateStatus_rejected(models.Model):
-    candidate_name = models.CharField(max_length=255)
+    first_name = models.CharField(max_length=255,default='John')
+    last_name = models.CharField(max_length=255,default='Doe')
     status = models.CharField(max_length=20,default='rejected')
     company_name = models.CharField(max_length=255)
     job_id = models.IntegerField()
 
 class CandidateStatus_not_eligible(models.Model):
-    candidate_name = models.CharField(max_length=255)
+    first_name = models.CharField(max_length=255,default='John')
+    last_name = models.CharField(max_length=255,default='Doe')
     status = models.CharField(max_length=20,default='not_eligible')
     company_name = models.CharField(max_length=255)
     job_id = models.IntegerField()
 
 class CandidateStatus_under_review(models.Model):
-    candidate_name = models.CharField(max_length=255)
+    first_name = models.CharField(max_length=255,default='John')
+    last_name = models.CharField(max_length=255,default='Doe')
     status = models.CharField(max_length=20,default='under_review')
     company_name = models.CharField(max_length=255)
     job_id = models.IntegerField()

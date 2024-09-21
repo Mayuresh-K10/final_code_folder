@@ -317,7 +317,7 @@ def mark_for_review(request):
 def fetch_event_types(request):
     try:
         if request.method == 'GET':
-            event_types = ProctoringEvent.objects.filter(event_type__isnull=False).values_list('event_type', flat=True).distinct()
+            event_types = ProctoringEvent.objects.filter(event_type__isnull=False).exclude(event_type='').values_list('event_type', flat=True).distinct()
             return api_response({'event_types': list(event_types)})
         else:
             return api_response({'status': 'error', 'message': 'Invalid request method'}, status=400)
@@ -327,7 +327,7 @@ def fetch_event_types(request):
 def fetch_section_types(request):
     try:
         if request.method == 'GET':
-            section_types = Question.objects.filter(section__isnull=False).values_list('section', flat=True).distinct()
+            section_types = Question.objects.filter(section__isnull=False).exclude(section='').values_list('section', flat=True).distinct()
             return api_response({'section_types': list(section_types)})
         else:
             return api_response({'status': 'error', 'message': 'Invalid request method'}, status=400)
@@ -337,7 +337,7 @@ def fetch_section_types(request):
 def fetch_status_types(request):
     try:
         if request.method == 'GET':
-            status_types = Question.objects.filter(status__isnull=False).values_list('status', flat=True).distinct()
+            status_types = Question.objects.filter(status__isnull=False).exclude(status='').values_list('status', flat=True).distinct()
             return api_response({'status_types': list(status_types)})
         else:
             return api_response({'status': 'error', 'message': 'Invalid request method'}, status=400)
