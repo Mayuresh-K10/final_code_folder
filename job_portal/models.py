@@ -80,7 +80,7 @@ class Resume(models.Model):
     phone = models.CharField(max_length=20, default='000-000-0000')
     address = models.TextField(default='N/A')
     date_of_birth = models.DateField(null=True, blank=True)
-    website_urls = models.JSONField(default=list)  
+    website_urls = models.JSONField(default=list)
     skills = models.TextField(default='Not specified')
     activities = models.TextField(default='None')
     interests = models.TextField(default='None')
@@ -144,7 +144,7 @@ class Certification(models.Model):
    name = models.CharField(max_length=100, default='Unknown')
    start_date = models.DateField(null=True, blank=True)
    end_date = models.DateField(null=True, blank=True)
- 
+
 class Achievements(models.Model):
     resume = models.ForeignKey(Resume, related_name='achievements', on_delete=models.CASCADE)
     title = models.CharField(max_length=100, default='Unknown')

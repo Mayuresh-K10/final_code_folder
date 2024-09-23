@@ -93,8 +93,6 @@
 #             self.stdout.write(self.style.ERROR(f'Error reading Excel file: {str(e)}'))
 
 
-from ast import iter_fields
-from email import parser
 import pandas as pd  # type: ignore
 from django.core.management.base import BaseCommand
 from test_series.models import Exam, ProctoringEvent, ProctoringSession, Question

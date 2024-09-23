@@ -4,10 +4,10 @@ from django.http import JsonResponse # type: ignore
 from django.middleware.csrf import get_token # type: ignore
 from django.views.decorators.csrf import csrf_exempt, csrf_protect # type: ignore
 from django.utils import timezone # type: ignore
-from django.db.models import Q,Subquery, OuterRef # type: ignore
+from django.db.models import Q # type: ignore
 from rest_framework.response import Response # type: ignore
 from .models import CandidateStatus_rejected, CandidateStatus_under_review, Job, Application, Company,CandidateStatus_selected,CandidateStatus_not_eligible, Resume, ScreeningAnswer, ScreeningQuestion, Student, Message, Attachment
-from .forms import AchievementForm, CertificationForm, CompanyForm, EducationForm, ExperienceForm, JobForm, ApplicationForm, Messageform, ObjectiveForm, ProjectForm, PublicationForm, ReferenceForm, ResumeForm, StudentForm
+from .forms import CompanyForm, JobForm, ApplicationForm, ResumeForm, StudentForm
 import json, operator, os
 from datetime import timedelta
 from django.utils.decorators import method_decorator # type: ignore
@@ -86,7 +86,7 @@ def job_list(request):
                 jobs = jobs.order_by(filter_params['sort_order'])
 
             jobs_list = [
-                { 
+                {
                 'id': job.id,
                 'job_title': job.job_title,
                 'company':job.company.name,
@@ -100,8 +100,7 @@ def job_list(request):
                 'workplaceTypes': job.workplaceTypes,
                 'questions': job.questions,
             } for job in jobs]
-             
-            
+
             return JsonResponse(jobs_list, safe=False, status=200)
 
         elif request.method == 'POST':
@@ -282,7 +281,7 @@ class CompanyListCreateView(View):
                 if delete_attachment and company.Attachment:
                     if os.path.exists(company.Attachment.path):
                         os.remove(company.Attachment.path)
-                    company.Attachment = None  
+                    company.Attachment = None
                     company.save()
 
                     return JsonResponse({'status': 'success', 'message': 'Attachment deleted successfully', 'company_id': company.id}, status=200)
@@ -325,9 +324,9 @@ class CompanyDetailView(View):
     def put(self, request, pk):
         try:
             company = Company.objects.get(pk=pk)
-            
+
             form = CompanyForm(request.POST, request.FILES, instance=company)
-            
+
             if form.is_valid():
                 form.save()
                 return JsonResponse({'message': 'Company updated successfully'}, status=200)
@@ -445,7 +444,7 @@ def create_resume(request):
     if request.method == 'POST':
         try:
             user_email = request.POST.get('email')
-            print("User Email:", user_email) 
+            print("User Email:", user_email)
             if not user_email:
                 return JsonResponse({'status': 'error', 'message': 'Email is required'}, status=400)
 
@@ -467,7 +466,7 @@ def create_resume(request):
                 if delete_attachment:
                     if resume.Attachment: 
                         print("Attachment Path:", resume.Attachment.path)
-                        if os.path.exists(resume.Attachment.path): 
+                        if os.path.exists(resume.Attachment.path):
                             os.remove(resume.Attachment.path)
                         resume.Attachment = None
                         resume.save()
@@ -480,7 +479,7 @@ def create_resume(request):
 
                 return JsonResponse({'status': 'success', 'message': 'Resume created successfully', 'resume_id': resume.id})
 
-            print("Form Errors:", resume_form.errors) 
+            print("Form Errors:", resume_form.errors)
             return JsonResponse({'status': 'error', 'errors': resume_form.errors})
 
         except json.JSONDecodeError as e:
@@ -488,7 +487,7 @@ def create_resume(request):
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON data'}, status=400)
 
         except IntegrityError as e:
-            print("IntegrityError:", str(e))  
+            print("IntegrityError:", str(e))
             return JsonResponse({'status': 'error', 'message': 'Database integrity error'}, status=500)
 
         except OperationalError as e:
@@ -673,7 +672,7 @@ def get_resume_detail_by_id(request, resume_id):
                     {
                         "name": certification.name,
                         "start_date": certification.start_date,
-                        "end_date": certification.end_date, 
+                        "end_date": certification.end_date,
                     } for certification in resume.certifications.all()
                 ],
                 "achievements": [
@@ -1406,7 +1405,7 @@ def jobs_by_company(request):
             'experience': job.experience,
             'category': job.category,
             'published_at': job.published_at,
-            'status': job.job_status  
+            'status': job.job_status
         } for job in jobs]
 
         return JsonResponse(jobs_list, safe=False, status=200)
@@ -1472,7 +1471,7 @@ def save_screening_questions_and_answers(request):
 #             if not first_question:
 #                 return JsonResponse({"error": f"Invalid question_id: {first_question_id}"}, status=400)
 
-#             job = first_question.job  
+#             job = first_question.job
 
 #             application = Application.objects.create(
 #                 job=job,

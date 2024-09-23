@@ -82,7 +82,7 @@ class StudentForm(forms.ModelForm):
 #         label="Plan",
 #         widget=forms.Select(attrs={'class': 'form-control'})
 #     )
-    
+
 # class ChoosePlanForm(forms.Form):
 
 #    PLAN_CHOICES = [
@@ -95,13 +95,13 @@ class StudentForm(forms.ModelForm):
 #    choices=PLAN_CHOICES,
 #    label="Plan",
 #    widget=forms.Select(attrs={'class': 'form-control'})
-# )    
+# )
 
 # class CancelSubscriptionForm(forms.Form):
 #     confirm_cancel = forms.BooleanField(
 #         label="Confirm Cancel",
 #         required=True
-#     )  
+#     )
 
 class Messageform(forms.ModelForm):
      class Meta:

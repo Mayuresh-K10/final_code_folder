@@ -44,7 +44,7 @@ def custom_login(request):
         return api_response(success=False, error='Invalid credentials', status=400)
 
     except Exception as e:
-        return api_response(success=False, error='An error occurred during login', 
+        return api_response(success=False, error='An error occurred during login',
                             details=str(e), status=500)
 
 @login_required
@@ -79,14 +79,14 @@ def start_proctoring_session(request):
                 [user_email]
             )
         except Exception as email_error:
-            return api_response(success=True, data={'session_id': session.id}, 
-                                error='Failed to send email notification', 
+            return api_response(success=True, data={'session_id': session.id},
+                                error='Failed to send email notification',
                                 details=str(email_error), status=500)
 
         return api_response(success=True, data={'session_id': session.id})
 
     except Exception as e:
-        return api_response(success=False, error='An error occurred while starting the session', 
+        return api_response(success=False, error='An error occurred while starting the session',
                             details=str(e), status=500)
 
 @login_required
@@ -115,14 +115,14 @@ def end_proctoring_session(request):
                 [user_email]
             )
         except Exception as email_error:
-            return api_response(success=True, data={'status': 'completed'}, 
-                                error=f'Failed to send email to {user_email}', 
+            return api_response(success=True, data={'status': 'completed'},
+                                error=f'Failed to send email to {user_email}',
                                 details=str(email_error), status=500)
 
         return api_response(success=True, data={'status': 'completed'})
 
     except Exception as e:
-        return api_response(success=False, error='An error occurred while ending the session', 
+        return api_response(success=False, error='An error occurred while ending the session',
                             details=str(e), status=500)
 
 @login_required
@@ -154,7 +154,7 @@ def record_proctoring_event(request):
                 [user_email]
             )
         except Exception as email_error:
-            return api_response(success=True, data={'status': 'event recorded'}, 
+            return api_response(success=True, data={'status': 'event recorded'},
                                 error='Failed to send email notification', 
                                 details=str(email_error), status=500)
 
@@ -212,7 +212,7 @@ def record_proctoring_event(request):
 
 #     except Exception as e:
 #         return api_response(success=False, error='An error occurred while submitting the answer', details=str(e), status=500)
-	
+
 @csrf_exempt
 @require_POST
 @login_required
@@ -237,7 +237,7 @@ def submit_answer(request):
             if user_response:
                 if user_response.selected_option == question.correct_option:
                     user_score, _ = UserScore.objects.get_or_create(user=request.user, exam=session.exam)
-                    if user_score.score > 0: 
+                    if user_score.score > 0:
                         user_score.score -= 1
                         user_score.save(update_fields=['score'])
 
