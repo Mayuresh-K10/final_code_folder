@@ -103,15 +103,6 @@ from test_series.models import Exam, ProctoringEvent, ProctoringSession, Questio
 class Command(BaseCommand):
     help = 'Import event types and question data from Excel files to the ProctoringEvent and Question models'
 
-    # def add_arguments(self, parser):
-    #     parser.add_argument('--event_type', type=str, help='Path to the Excel file containing event types')
-    #     parser.add_argument('--question_status', type=str, help='Path to the Excel file containing question statuses')
-    #     parser.add_argument('--question_section_type', type=str, help='Path to the Excel file containing question section types')
-    #     # parser.add_argument('--session_status_type', type=str, help='Path to the Excel file containing session statuses')
-    #     parser.add_argument('--session_id', type=int, required=True, help='Session ID to associate with ProctoringEvent')
-    #     parser.add_argument('--exam_id', type=int, required=True, help='Exam ID to associate with Questions')
-    #     # parser.add_argument('--user_id', type=int, required=True, help='User ID to associate with ProctoringSession')
-
     def add_arguments(self, parser):
         file_fields = [
         ('--event_type', 'Path to the Excel file containing event types'),

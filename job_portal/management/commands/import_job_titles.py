@@ -100,17 +100,6 @@ from job_portal.models import Application, Job, Company
 class Command(BaseCommand):
     help = 'Import data from multiple Excel files to the Job, Company, and Application models'
 
-    # def add_arguments(self, parser):
-    #     parser.add_argument('job_title', type=str, help='Path to the Excel file containing job titles')
-    #     parser.add_argument('job_type', type=str, help='Path to the Excel file containing job types')
-    #     parser.add_argument('exp_type', type=str, help='Path to the Excel file containing job experience')
-    #     parser.add_argument('category_type', type=str, help='Path to the Excel file containing job categories')
-    #     parser.add_argument('workplace_types', type=str, help='Path to the Excel file containing workplace types')
-    #     parser.add_argument('location_types', type=str, help='Path to the Excel file containing job locations')
-    #     parser.add_argument('sector_type', type=str, help='Path to the Excel file containing sector types')
-    #     parser.add_argument('country_type', type=str, help='Path to the Excel file containing country names')
-    #     parser.add_argument('application_status', type=str, help='Path to the Excel file containing application statuses')
-    
     def add_arguments(self, parser):
         file_fields = [
             ('job_title', 'Path to the Excel file containing job titles'),

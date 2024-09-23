@@ -46,5 +46,5 @@ urlpatterns = [
     path('jobs-by-company/', views.jobs_by_company, name='jobs_by_company'),
     path('submit-screening-answers/', views.submit_application_with_screening, name='submit-screening-answers'),
     path('save-questions-answers/', views.save_screening_questions_and_answers, name='save_questions_answers'),
-    
+
 ]

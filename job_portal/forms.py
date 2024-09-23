@@ -55,27 +55,27 @@ class ReferenceForm(forms.ModelForm):
     class Meta:
         model = Reference
         fields = ['name', 'contact_info', 'relationship']
-        
+
 class CertificationForm(forms.ModelForm):
     class Meta:
         model = Certification
-        fields = ['name','start_date','end_date']  
-              
+        fields = ['name','start_date','end_date']
+
 class AchievementForm(forms.ModelForm):
     class Meta:
         model = Achievements
         fields = ['title','publisher','date_of_issue']
-          
+
 class PublicationForm(forms.ModelForm):
     class Meta:
         model = Publications
         fields = ['title', 'publisher', 'date_of_publications']
-    
+
 class StudentForm(forms.ModelForm):
     class Meta:
         model = Student
         fields = ['first_name', 'last_name', 'email', 'contact_no', 'qualification','skills']
-        
+
 # class ChoosePlanForm(forms.Form):
 #     plan_id = forms.ModelChoiceField(
 #         queryset=MembershipPlan.objects.all(),
@@ -107,10 +107,8 @@ class Messageform(forms.ModelForm):
      class Meta:
         model = Message
         fields = '__all__'
-       
 
 class Attachmentform(forms.ModelForm):
      class Meta:
         model = Attachment
         fields = '__all__'
-        

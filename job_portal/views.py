@@ -111,14 +111,14 @@ def job_list(request):
 
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-  
+
 @csrf_exempt
 def handle_post_request(request):
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
-    
+
     company_name = data.get('company')
     if not company_name:
         return JsonResponse({'error': 'Company name is required'}, status=400)
@@ -135,14 +135,14 @@ def handle_post_request(request):
     if job_skills:
         unique_job_list = list(set(job_skills.split(', ')))
         data['skills'] = ', '.join(unique_job_list)
-        
+
     data['company'] = company.id
     
     form = JobForm(data)
     if form.is_valid():
         job = form.save()
-        
-        promoting_job = data.get('promoting_job').lower() 
+
+        promoting_job = data.get('promoting_job').lower()
         if promoting_job == 'true':
             return JsonResponse({'message': 'Job Created Successfully with Promoting', 'job_id': job.id}, status=201)
         elif promoting_job == 'false':
@@ -177,10 +177,10 @@ def job_detail(request, job_id):
             if company_name:
                 try:
                     company = Company.objects.get(name=company_name)
-                    data['company'] = company.id  
+                    data['company'] = company.id
                 except Company.DoesNotExist:
                     return JsonResponse({'error': f'Company "{company_name}" does not exist.'}, status=404)
-           
+
             form = JobForm(data, instance=job)
             if form.is_valid():
                 form.save()
@@ -269,7 +269,7 @@ class CompanyListCreateView(View):
                 return JsonResponse({'status': 'error', 'message': 'Email is required'}, status=400)
 
             company = Company.objects.filter(email=company_email).first()
-            
+
             if company:
                 company_form = CompanyForm(request.POST, request.FILES, instance=company)
             else:
@@ -286,14 +286,14 @@ class CompanyListCreateView(View):
                     company.save()
 
                     return JsonResponse({'status': 'success', 'message': 'Attachment deleted successfully', 'company_id': company.id}, status=200)
-                
+
                 return JsonResponse({'status': 'success', 'message': 'Company created successfully', 'company_id': company.id}, status=201)
             else:
                 return JsonResponse(company_form.errors, status=400)
 
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
-        
+
 @method_decorator(csrf_exempt, name='dispatch')
 class CompanyDetailView(View):
     def get(self, request, pk):
@@ -414,9 +414,9 @@ def company_status(request, status_choice):
             return JsonResponse({'error': f'Company "{co_name}" does not exist.'}, status=404)
 
         job_id = Job.objects.filter(company=company)
-        
+
         apply_id = Application.objects.filter(job__in=job_id)
-        
+
         name = []
         if status_choice == 'selected':
             candidate_status_modelname = CandidateStatus_selected
@@ -439,7 +439,7 @@ def company_status(request, status_choice):
         return JsonResponse({'message': name}, status=200)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-    
+
 @csrf_exempt
 def create_resume(request):
     if request.method == 'POST':
@@ -448,16 +448,16 @@ def create_resume(request):
             print("User Email:", user_email) 
             if not user_email:
                 return JsonResponse({'status': 'error', 'message': 'Email is required'}, status=400)
-            
+
             resume = Resume.objects.filter(email=user_email).first()
-            print("Resume Object:", resume)  
+            print("Resume Object:", resume)
 
             if resume:
                 resume_form = ResumeForm(request.POST, request.FILES, instance=resume)
             else:
                 resume_form = ResumeForm(request.POST, request.FILES)
             
-            print("Resume Form Validity:", resume_form.is_valid())  
+            print("Resume Form Validity:", resume_form.is_valid())
             if resume_form.is_valid():
                 resume = resume_form.save()
 
@@ -466,7 +466,7 @@ def create_resume(request):
 
                 if delete_attachment:
                     if resume.Attachment: 
-                        print("Attachment Path:", resume.Attachment.path) 
+                        print("Attachment Path:", resume.Attachment.path)
                         if os.path.exists(resume.Attachment.path): 
                             os.remove(resume.Attachment.path)
                         resume.Attachment = None
@@ -484,7 +484,7 @@ def create_resume(request):
             return JsonResponse({'status': 'error', 'errors': resume_form.errors})
 
         except json.JSONDecodeError as e:
-            print("JSONDecodeError:", str(e))  
+            print("JSONDecodeError:", str(e))
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON data'}, status=400)
 
         except IntegrityError as e:
@@ -492,16 +492,16 @@ def create_resume(request):
             return JsonResponse({'status': 'error', 'message': 'Database integrity error'}, status=500)
 
         except OperationalError as e:
-            print("OperationalError:", str(e)) 
+            print("OperationalError:", str(e))
             return JsonResponse({'status': 'error', 'message': 'Database operational error'}, status=500)
 
         except Exception as e:
-            print("General Exception:", str(e)) 
+            print("General Exception:", str(e))
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
-    
+
 # @csrf_exempt
 # def create_resume(request):
 #     if request.method == 'POST':
@@ -691,7 +691,7 @@ def get_resume_detail_by_id(request, resume_id):
                     } for publication in resume.publications.all()
                 ]
             }
-            
+
             return JsonResponse(resume_data, status=200)
         else:
             return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -945,27 +945,27 @@ def filter_applied_jobs(request):
         job_title = request.GET.get('job_title')
         status = request.GET.get('status')
         job_type = request.GET.get('job_type')
-        sort_by = request.GET.get('sort_by')  
+        sort_by = request.GET.get('sort_by')
 
         applications = Application.objects.filter(email=email)
-        
+
         if job_title:
-            applications = applications.filter(job__job_title=job_title) 
-            
+            applications = applications.filter(job__job_title=job_title)
+
         if status:
             applications = applications.filter(status=status)
-            
+
         if job_type:
             applications = applications.filter(job__job_type=job_type)
 
         if sort_by == 'job_title_asc':
-            applications = applications.order_by('job__job_title')  
+            applications = applications.order_by('job__job_title')
         elif sort_by == 'job_title_desc':
-            applications = applications.order_by('-job__job_title')  
+            applications = applications.order_by('-job__job_title')
         elif sort_by == 'applied_at_asc':
-            applications = applications.order_by('applied_at')  
+            applications = applications.order_by('applied_at')
         elif sort_by == 'applied_at_desc':
-            applications = applications.order_by('-applied_at')  
+            applications = applications.order_by('-applied_at')
 
         result = []
         for application in applications:
@@ -984,7 +984,7 @@ def filter_applied_jobs(request):
         return JsonResponse({'error': 'No applications found for the provided email'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-      
+
 def sort_saved_jobs(request):
     try:
         job_type = request.GET.get('job_type')
@@ -1219,14 +1219,14 @@ def delete_account(request, username):
 #                 'status': 'success',
 #                 'contacts': contact_list
 #             }, status=200)
-            
+
 @csrf_exempt
 def save_student(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         form = StudentForm(data)
         if form.is_valid():
-            student=form.save()  
+            student=form.save()
             return JsonResponse({'message': 'Student data saved successfully','student_id':student.id}, status=201)
         else:
             return JsonResponse({'errors': form.errors}, status=400)
@@ -1237,7 +1237,7 @@ def fetch_jobs_by_student_skills(request):
     try:
         if request.method == 'GET':
             student_id = request.GET.get('student_id')
-            sort_order = request.GET.get('sort_order', 'latest')  
+            sort_order = request.GET.get('sort_order', 'latest')
 
             if not student_id:
                 return JsonResponse({'error': 'Please provide a student ID.'}, status=400)
@@ -1261,16 +1261,16 @@ def fetch_jobs_by_student_skills(request):
                 return JsonResponse({'error': 'No skills found for this student.'}, status=400)
 
             if sort_order == 'latest':
-                jobs = jobs.order_by('-published_at')  
+                jobs = jobs.order_by('-published_at')
             elif sort_order == 'oldest':
-                jobs = jobs.order_by('published_at') 
+                jobs = jobs.order_by('published_at')
             else:
                 return JsonResponse({'error': 'Invalid sort order. Use "latest" or "oldest".'}, status=400)
 
             job_list = []
             for job in jobs:
                 job_list.append({
-                    'company_name': job.company.name,  
+                    'company_name': job.company.name,
                     'job_title': job.job_title,
                     'location': job.location,
                     'job_type': job.job_type,
@@ -1286,7 +1286,7 @@ def fetch_jobs_by_student_skills(request):
 def create_job_alert(request):
     if request.method == 'POST':
         action = request.POST.get('action')
-        
+
         if action is None:
             return JsonResponse({'status': 'error', 'message': 'Action parameter is missing'}, status=400)
         
@@ -1295,7 +1295,7 @@ def create_job_alert(request):
 
         elif action == 'apply':
             return JsonResponse("Applied Successfully", safe=False)
-        
+
     return JsonResponse({'error': 'Invalid request method'}, status=405)
 
 # @csrf_exempt
@@ -1343,32 +1343,32 @@ def company_status_counts(request):
 
     if not company_name:
         return JsonResponse({'error': 'Company name is required'}, status=400)
-    
+
     try:
         company = Company.objects.get(name=company_name)
         print(company)
     except Company.DoesNotExist:
         return JsonResponse({'error': 'Company not found'}, status=404)
-    
+
     total_applications = Application.objects.filter(job__company=company).count()
     selected_count = Application.objects.filter(job__company=company, status='selected').count()
     rejected_count = Application.objects.filter(job__company=company, status='rejected').count()
     jobs_posted = Job.objects.filter(company=company).count()
-    
+
     data = {
         'total_applications': total_applications,
         'selected_count': selected_count,
         'rejected_count': rejected_count,
         'jobs_posted': jobs_posted
     }
-    
+
     return JsonResponse(data)
 
 def jobs_by_company(request):
     try:
         company_name = request.GET.get('name')
         sort_order = request.GET.get('sort_order')
-        job_status = request.GET.get('job_status')  
+        job_status = request.GET.get('job_status')
 
         if not (company_name or sort_order or job_status):
             return JsonResponse({'error': 'Select at least one parameter'}, status=400)
@@ -1378,7 +1378,7 @@ def jobs_by_company(request):
             jobs = Job.objects.filter(company=company)
         else:
             jobs = Job.objects.all()
-        
+
         if job_status:
          if job_status:
             if job_status.lower() == 'active':
@@ -1387,7 +1387,7 @@ def jobs_by_company(request):
                 jobs = jobs.filter(job_status='closed')
             else:
                 return JsonResponse({'error': 'Invalid job status'}, status=400)
-        
+
         if sort_order:
             if sort_order == 'latest':
                 jobs = jobs.order_by('-published_at')
@@ -1395,7 +1395,7 @@ def jobs_by_company(request):
                 jobs = jobs.order_by('published_at')
             else:
                 return JsonResponse({'error': 'Invalid sort order'}, status=400)
-            
+
         jobs_list = [{
             'id': job.id,
             'job_title': job.job_title,
@@ -1413,19 +1413,19 @@ def jobs_by_company(request):
 
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-    
+
 @csrf_exempt
 def save_screening_questions_and_answers(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body.decode('utf-8'))
-            
+
             job_id = data.get('job_id')
-            questions_and_answers = data.get('questions_and_answers')  
+            questions_and_answers = data.get('questions_and_answers')
 
             if not job_id:
                 return JsonResponse({'status': 'error', 'message': 'Job ID is missing'}, status=400)
-            
+
             if not questions_and_answers:
                 return JsonResponse({'status': 'error', 'message': 'Questions and answers are missing'}, status=400)
 
@@ -1568,7 +1568,7 @@ def submit_application_with_screening(request):
             if not first_question:
                 return JsonResponse({"error": f"Invalid question_id: {first_question_id}"}, status=400)
 
-            job = first_question.job  
+            job = first_question.job
 
             application = Application.objects.create(
                 job=job,
@@ -1652,7 +1652,7 @@ def submit_application_with_screening(request):
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
 
-    return JsonResponse({"error": "Invalid request method"}, status=405)    
+    return JsonResponse({"error": "Invalid request method"}, status=405)
 
 # @csrf_exempt
 # def myInbox(request):
@@ -1740,7 +1740,7 @@ def myInbox(request):
                 messages_query = messages_query.filter(is_read=True)
             elif filter_value == 'unread':
                 messages_query = messages_query.filter(is_read=False)
-            
+
             message_list = []
             for message in messages_query:
                 attachments = message.attachments.all()
@@ -1764,18 +1764,18 @@ def myInbox(request):
                 'status': 'success',
                 'messages': message_list
             }, status=200)
-        
+
         except Exception as e:
             return JsonResponse({
                 'status': 'false',
                 'error': str(e)
             }, status=500)
-    
+
     return JsonResponse({'status': 'false', 'message': 'Invalid request method'}, status=405)
 
 @csrf_exempt
 def getMessages(request):
-    if request.method == "GET":  
+    if request.method == "GET":
         try:
             sender_email = request.GET.get('sender_email')
             recipient_email = request.GET.get('recipient_email')
@@ -1830,12 +1830,12 @@ def getMessages(request):
                 'status': 'false',
                 'error': str(e)
             }, status=500)
-    
+
     return JsonResponse({
         'status': 'false',
         'message': 'Invalid request method'
     }, status=405)
-  
+
 @csrf_exempt
 def sendMessage(request):
     if request.method == "POST":
@@ -1853,12 +1853,12 @@ def sendMessage(request):
 
             message = Message.objects.create(sender=sender, recipient=recipient, content=message_content)
 
-            
+
             if request.FILES:
                 for file in request.FILES.getlist('attachments'):
                     Attachment.objects.create(message=message, file=file)
 
-           
+
             email_subject = 'New Message from {}'.format(sender.email)
             email_body = 'You have received a new message from {}.\n\nContent: {}\n\nYou can view the message in your inbox.'.format(sender.email, message_content)
             send_mail(
@@ -1873,7 +1873,7 @@ def sendMessage(request):
 
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-        
+
 @csrf_exempt
 def searchUser(request):
     if request.method == "GET":
@@ -1881,20 +1881,19 @@ def searchUser(request):
 
         if query:
             contacts = User.objects.filter(
-                Q(first_name__icontains=query) |
-                Q(last_name__icontains=query) |
+                Q(username__icontains=query) |
                 Q(email__icontains=query)  # Include email search
             )
 
-            contact_list = list(contacts.values('id', 'first_name', 'last_name', 'email'))
-            
+            contact_list = list(contacts.values('id', 'username','email'))
+
             return JsonResponse({
                 'status': 'success',
                 'contacts': contact_list
             }, status=200)
-        
+
         else:
-            contacts = User.objects.all().values('id', 'first_name', 'last_name', 'email')
+            contacts = User.objects.all().values('id','username', 'email')
             contact_list = list(contacts)
 
             return JsonResponse({

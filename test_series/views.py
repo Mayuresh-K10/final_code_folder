@@ -31,18 +31,18 @@ def custom_login(request):
     try:
         username = request.POST.get('username')
         password = request.POST.get('password')
-        
+
         if not username or not password:
             return api_response(success=False, error='Username and password are required', status=400)
-        
+
         user = authenticate(request, username=username, password=password)
-        
+
         if user:
             auth_login(request, user)
             return api_response(success=True, data={'message': 'Login successful'})
-        
+
         return api_response(success=False, error='Invalid credentials', status=400)
-    
+
     except Exception as e:
         return api_response(success=False, error='An error occurred during login', 
                             details=str(e), status=500)
@@ -87,7 +87,7 @@ def start_proctoring_session(request):
 
     except Exception as e:
         return api_response(success=False, error='An error occurred while starting the session', 
-                            details=str(e), status=500)    
+                            details=str(e), status=500)
 
 @login_required
 @require_POST
@@ -240,7 +240,7 @@ def submit_answer(request):
                     if user_score.score > 0: 
                         user_score.score -= 1
                         user_score.save(update_fields=['score'])
-                
+
                 user_response.delete()
             return api_response(success=True, data={'message': 'Response cleared and score updated.'})
 
@@ -268,8 +268,8 @@ def submit_answer(request):
 
     except Exception as e:
         return api_response(success=False, error='An error occurred while submitting the answer', details=str(e), status=500)
- 
- 
+
+
 @login_required
 def get_session_status(request, session_id):
     try:
@@ -340,7 +340,7 @@ def count_questions(request, exam_id):
             return api_response(success=False, error='No Questions found for this Exam', data={'exam_name': exam.name}, status=404)
 
         return api_response(success=True, data={'question_count': question_count, 'exam_name': exam.name})
-        
+
     except Exception as e:
         return api_response(success=False, error='An error occurred while counting questions', details=str(e), status=500)
 
@@ -380,7 +380,7 @@ def fetch_event_types(request):
             return api_response({'status': 'error', 'message': 'Invalid request method'}, status=400)
     except Exception as e:
         return api_response({'status': 'error', 'message': str(e)}, status=500)
-    
+
 def fetch_section_types(request):
     try:
         if request.method == 'GET':
@@ -390,7 +390,7 @@ def fetch_section_types(request):
             return api_response({'status': 'error', 'message': 'Invalid request method'}, status=400)
     except Exception as e:
         return api_response({'status': 'error', 'message': str(e)}, status=500)
-    
+
 def fetch_status_types(request):
     try:
         if request.method == 'GET':
@@ -462,7 +462,7 @@ def get_details(request):
                 'Name': data.get('name'),
                 'Phone': data.get('mobile_no'),
                 'Email': data.get('email'),
-                'Score': score,  
+                'Score': score,
                 'answered_questions': answered_questions,
                 'not_answered_questions': not_answered_questions,
                 'marked_for_review': marked_for_review,

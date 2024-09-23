@@ -138,7 +138,7 @@ class Reference(models.Model):
 
     def __str__(self):
         return self.name
-    
+
 class Certification(models.Model):
    resume = models.ForeignKey(Resume, related_name='certifications', on_delete=models.CASCADE)
    name = models.CharField(max_length=100, default='Unknown')
@@ -150,13 +150,12 @@ class Achievements(models.Model):
     title = models.CharField(max_length=100, default='Unknown')
     publisher = models.CharField(max_length=100, default='Unknown')
     date_of_issue = models.DateField(null=True, blank=True)
-    
+
 class Publications(models.Model):
     resume = models.ForeignKey(Resume, related_name='publications', on_delete=models.CASCADE)
     title = models.CharField(max_length=100, default='Unknown')
     publisher = models.CharField(max_length=100, default='Unknown')
-    date_of_publications = models.DateField(null=True, blank=True)   
-
+    date_of_publications = models.DateField(null=True, blank=True)
 
 class CandidateStatus_selected(models.Model):
     first_name = models.CharField(max_length=255,default='John')
@@ -185,15 +184,14 @@ class CandidateStatus_under_review(models.Model):
     status = models.CharField(max_length=20,default='under_review')
     company_name = models.CharField(max_length=255)
     job_id = models.IntegerField()
-    
+
 class Message(models.Model):
     sender = models.ForeignKey(User, related_name='sender', on_delete=models.CASCADE)
     recipient = models.ForeignKey(User, related_name='recipient', on_delete=models.CASCADE)
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
-    is_read = models.BooleanField(default=False) 
-    # is_primary=models.BooleanField(default=False)
-    
+    is_read = models.BooleanField(default=False)
+
     def __str__(self):
         return f"{self.sender.email} -> {self.recipient.email}"
 
@@ -204,18 +202,18 @@ class Attachment(models.Model):
     message = models.ForeignKey('Message', related_name='attachments', on_delete=models.CASCADE)
     file = models.FileField(upload_to='attachments/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
-    
+
     def __str__(self):
-        return f"Attachment for message {self.message.id}" 
-    
+        return f"Attachment for message {self.message.id}"
+
 class Student(models.Model):
     first_name =  models.CharField(max_length=100, default='John')
     last_name = models.CharField(max_length=100, default='Doe')
     email = models.EmailField(default='example@example.com')
     contact_no = models.CharField(max_length=20, default='000-000-0000')
     qualification = models.TextField(default='N/A')
-    skills = models.TextField(default='Not specified') 
-    
+    skills = models.TextField(default='Not specified')
+
 # class MembershipPlan(models.Model):
 #     PLAN_CHOICES = [
 #         ('Standard', 'Standard'),
@@ -242,13 +240,13 @@ class Student(models.Model):
 #         return timezone.now() < self.renewal_date
 
 #     def __str__(self):
-#         return f'{self.user.username} - {self.current_plan.name}'   
-    
- 
+#         return f'{self.user.username} - {self.current_plan.name}'
+
+
 class ScreeningQuestion(models.Model):
     job = models.ForeignKey(Job, related_name='screening_questions', on_delete=models.CASCADE)
     question_text = models.TextField()
-    correct_answer = models.TextField()  
+    correct_answer = models.TextField()
 
     def __str__(self):
         return self.question_text[:50]
@@ -259,7 +257,6 @@ class ScreeningAnswer(models.Model):
     answer_text = models.TextField()
 
     def __str__(self):
-        return f"Answer for {self.question.question_text[:50]}"        
-    
+        return f"Answer for {self.question.question_text[:50]}"
 
-     
+
