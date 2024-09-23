@@ -7,7 +7,7 @@ from django.utils import timezone # type: ignore
 from django.db.models import Q # type: ignore
 from rest_framework.response import Response # type: ignore
 from .models import CandidateStatus_rejected, CandidateStatus_under_review, Job, Application, Company,CandidateStatus_selected,CandidateStatus_not_eligible, Resume, ScreeningAnswer, ScreeningQuestion, Student, Message, Attachment
-from .forms import CompanyForm, JobForm, ApplicationForm, ResumeForm, StudentForm
+from .forms import AchievementForm, CertificationForm, CompanyForm, EducationForm, ExperienceForm, JobForm, ApplicationForm, ObjectiveForm, ProjectForm, PublicationForm, ReferenceForm, ResumeForm, StudentForm
 import json, operator, os
 from datetime import timedelta
 from django.utils.decorators import method_decorator # type: ignore
@@ -172,7 +172,7 @@ def job_detail(request, job_id):
         elif request.method == 'PUT':
             data = json.loads(request.body)
             company_name = data.get('company')
-           
+
             if company_name:
                 try:
                     company = Company.objects.get(name=company_name)
@@ -474,8 +474,69 @@ def create_resume(request):
                     else:
                         return JsonResponse({'status': 'error', 'message': 'No attachment to delete'}, status=400)
 
-                # Proceed with other form data (objective, education, etc.)...
-                # ...
+                objective_data = request.POST.get('objective', {})
+                if objective_data:
+                    objective_form = ObjectiveForm(json.loads(objective_data))
+                    if objective_form.is_valid():
+                        objective = objective_form.save(commit=False)
+                        objective.resume = resume
+                        objective.save()
+
+                education_data = json.loads(request.POST.get('education', '[]'))
+                for item in education_data:
+                    education_form = EducationForm(item)
+                    if education_form.is_valid():
+                        education = education_form.save(commit=False)
+                        education.resume = resume
+                        education.save()
+
+                experience_data = json.loads(request.POST.get('experience', '[]'))
+                for item in experience_data:
+                    experience_form = ExperienceForm(item)
+                    if experience_form.is_valid():
+                        experience = experience_form.save(commit=False)
+                        experience.resume = resume
+                        experience.save()
+
+                project_data = json.loads(request.POST.get('projects', '[]'))
+                for item in project_data:
+                    project_form = ProjectForm(item)
+                    if project_form.is_valid():
+                        project = project_form.save(commit=False)
+                        project.resume = resume
+                        project.save()
+
+                reference_data = json.loads(request.POST.get('references', '[]'))
+                for item in reference_data:
+                    reference_form = ReferenceForm(item)
+                    if reference_form.is_valid():
+                        reference = reference_form.save(commit=False)
+                        reference.resume = resume
+                        reference.save()
+
+                certifications_data = json.loads(request.POST.get('certifications', '[]'))
+                for item in certifications_data:
+                    certifications_form = CertificationForm(item)
+                    if certifications_form.is_valid():
+                        certifications = certifications_form.save(commit=False)
+                        certifications.resume = resume
+                        certifications.save()
+
+                achievements_data = json.loads(request.POST.get('achievements', '[]'))
+                for item in achievements_data:
+                    achievements_form = AchievementForm(item)
+                    if achievements_form.is_valid():
+                        achievements = achievements_form.save(commit=False)
+                        achievements.resume = resume
+                        achievements.save()
+
+                publications_data = json.loads(request.POST.get('publications', '[]'))
+                for item in publications_data:
+                    publications_form = PublicationForm(item)
+                    if publications_form.is_valid():
+                        publications = publications_form.save(commit=False)
+                        publications.resume = resume
+                        publications.save()
 
                 return JsonResponse({'status': 'success', 'message': 'Resume created successfully', 'resume_id': resume.id})
 
