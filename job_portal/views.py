@@ -439,119 +439,180 @@ def company_status(request, status_choice):
         return JsonResponse({'message': name}, status=200)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-
+    
 @csrf_exempt
 def create_resume(request):
     if request.method == 'POST':
         try:
             user_email = request.POST.get('email')
+            print("User Email:", user_email) 
             if not user_email:
                 return JsonResponse({'status': 'error', 'message': 'Email is required'}, status=400)
             
             resume = Resume.objects.filter(email=user_email).first()
+            print("Resume Object:", resume)  
 
             if resume:
                 resume_form = ResumeForm(request.POST, request.FILES, instance=resume)
             else:
                 resume_form = ResumeForm(request.POST, request.FILES)
             
+            print("Resume Form Validity:", resume_form.is_valid())  
             if resume_form.is_valid():
                 resume = resume_form.save()
 
                 delete_attachment = request.POST.get('delete', 'false').lower() == 'true'
+                print("Delete Attachment:", delete_attachment)
 
-                if delete_attachment and resume.Attachment:
-                    if os.path.exists(resume.Attachment.path):
-                        os.remove(resume.Attachment.path)
-                    
-                    resume.Attachment = None
-                    resume.save()
-                    
-                    return JsonResponse({'status': 'success', 'message': 'Attachment deleted successfully', 'resume_id': resume.id})
+                if delete_attachment:
+                    if resume.Attachment: 
+                        print("Attachment Path:", resume.Attachment.path) 
+                        if os.path.exists(resume.Attachment.path): 
+                            os.remove(resume.Attachment.path)
+                        resume.Attachment = None
+                        resume.save()
+                        return JsonResponse({'status': 'success', 'message': 'Attachment deleted successfully', 'resume_id': resume.id})
+                    else:
+                        return JsonResponse({'status': 'error', 'message': 'No attachment to delete'}, status=400)
 
-                objective_data = request.POST.get('objective', {})
-                if objective_data:
-                    objective_form = ObjectiveForm(json.loads(objective_data))
-                    if objective_form.is_valid():
-                        objective = objective_form.save(commit=False)
-                        objective.resume = resume
-                        objective.save()
-
-                education_data = json.loads(request.POST.get('education', '[]'))
-                for item in education_data:
-                    education_form = EducationForm(item)
-                    if education_form.is_valid():
-                        education = education_form.save(commit=False)
-                        education.resume = resume
-                        education.save()
-
-                experience_data = json.loads(request.POST.get('experience', '[]'))
-                for item in experience_data:
-                    experience_form = ExperienceForm(item)
-                    if experience_form.is_valid():
-                        experience = experience_form.save(commit=False)
-                        experience.resume = resume
-                        experience.save()
-
-                project_data = json.loads(request.POST.get('projects', '[]'))
-                for item in project_data:
-                    project_form = ProjectForm(item)
-                    if project_form.is_valid():
-                        project = project_form.save(commit=False)
-                        project.resume = resume
-                        project.save()
-
-                reference_data = json.loads(request.POST.get('references', '[]'))
-                for item in reference_data:
-                    reference_form = ReferenceForm(item)
-                    if reference_form.is_valid():
-                        reference = reference_form.save(commit=False)
-                        reference.resume = resume
-                        reference.save()
-
-                certifications_data = json.loads(request.POST.get('certifications', '[]'))
-                for item in certifications_data:
-                    certifications_form = CertificationForm(item)
-                    if certifications_form.is_valid():
-                        certifications = certifications_form.save(commit=False)
-                        certifications.resume = resume
-                        certifications.save()
-
-                achievements_data = json.loads(request.POST.get('achievements', '[]'))
-                for item in achievements_data:
-                    achievements_form = AchievementForm(item)
-                    if achievements_form.is_valid():
-                        achievements = achievements_form.save(commit=False)
-                        achievements.resume = resume
-                        achievements.save()
-
-                publications_data = json.loads(request.POST.get('publications', '[]'))
-                for item in publications_data:
-                    publications_form = PublicationForm(item)
-                    if publications_form.is_valid():
-                        publications = publications_form.save(commit=False)
-                        publications.resume = resume
-                        publications.save()
+                # Proceed with other form data (objective, education, etc.)...
+                # ...
 
                 return JsonResponse({'status': 'success', 'message': 'Resume created successfully', 'resume_id': resume.id})
 
+            print("Form Errors:", resume_form.errors) 
             return JsonResponse({'status': 'error', 'errors': resume_form.errors})
 
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as e:
+            print("JSONDecodeError:", str(e))  
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON data'}, status=400)
 
-        except IntegrityError:
+        except IntegrityError as e:
+            print("IntegrityError:", str(e))  
             return JsonResponse({'status': 'error', 'message': 'Database integrity error'}, status=500)
 
-        except OperationalError:
+        except OperationalError as e:
+            print("OperationalError:", str(e)) 
             return JsonResponse({'status': 'error', 'message': 'Database operational error'}, status=500)
 
         except Exception as e:
+            print("General Exception:", str(e)) 
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+    
+# @csrf_exempt
+# def create_resume(request):
+#     if request.method == 'POST':
+#         try:
+#             user_email = request.POST.get('email')
+#             if not user_email:
+#                 return JsonResponse({'status': 'error', 'message': 'Email is required'}, status=400)
+            
+#             resume = Resume.objects.filter(email=user_email).first()
 
+#             if resume:
+#                 resume_form = ResumeForm(request.POST, request.FILES, instance=resume)
+#             else:
+#                 resume_form = ResumeForm(request.POST, request.FILES)
+            
+#             if resume_form.is_valid():
+#                 resume = resume_form.save()
+
+#                 delete_attachment = request.POST.get('delete', 'false').lower() == 'true'
+
+#                 if delete_attachment and resume.Attachment:
+#                     if os.path.exists(resume.Attachment.path):
+#                         os.remove(resume.Attachment.path)
+                    
+#                     resume.Attachment = None
+#                     resume.save()
+                    
+#                     return JsonResponse({'status': 'success', 'message': 'Attachment deleted successfully', 'resume_id': resume.id})
+
+#                 objective_data = request.POST.get('objective', {})
+#                 if objective_data:
+#                     objective_form = ObjectiveForm(json.loads(objective_data))
+#                     if objective_form.is_valid():
+#                         objective = objective_form.save(commit=False)
+#                         objective.resume = resume
+#                         objective.save()
+
+#                 education_data = json.loads(request.POST.get('education', '[]'))
+#                 for item in education_data:
+#                     education_form = EducationForm(item)
+#                     if education_form.is_valid():
+#                         education = education_form.save(commit=False)
+#                         education.resume = resume
+#                         education.save()
+
+#                 experience_data = json.loads(request.POST.get('experience', '[]'))
+#                 for item in experience_data:
+#                     experience_form = ExperienceForm(item)
+#                     if experience_form.is_valid():
+#                         experience = experience_form.save(commit=False)
+#                         experience.resume = resume
+#                         experience.save()
+
+#                 project_data = json.loads(request.POST.get('projects', '[]'))
+#                 for item in project_data:
+#                     project_form = ProjectForm(item)
+#                     if project_form.is_valid():
+#                         project = project_form.save(commit=False)
+#                         project.resume = resume
+#                         project.save()
+
+#                 reference_data = json.loads(request.POST.get('references', '[]'))
+#                 for item in reference_data:
+#                     reference_form = ReferenceForm(item)
+#                     if reference_form.is_valid():
+#                         reference = reference_form.save(commit=False)
+#                         reference.resume = resume
+#                         reference.save()
+
+#                 certifications_data = json.loads(request.POST.get('certifications', '[]'))
+#                 for item in certifications_data:
+#                     certifications_form = CertificationForm(item)
+#                     if certifications_form.is_valid():
+#                         certifications = certifications_form.save(commit=False)
+#                         certifications.resume = resume
+#                         certifications.save()
+
+#                 achievements_data = json.loads(request.POST.get('achievements', '[]'))
+#                 for item in achievements_data:
+#                     achievements_form = AchievementForm(item)
+#                     if achievements_form.is_valid():
+#                         achievements = achievements_form.save(commit=False)
+#                         achievements.resume = resume
+#                         achievements.save()
+
+#                 publications_data = json.loads(request.POST.get('publications', '[]'))
+#                 for item in publications_data:
+#                     publications_form = PublicationForm(item)
+#                     if publications_form.is_valid():
+#                         publications = publications_form.save(commit=False)
+#                         publications.resume = resume
+#                         publications.save()
+
+#                 return JsonResponse({'status': 'success', 'message': 'Resume created successfully', 'resume_id': resume.id})
+
+#             return JsonResponse({'status': 'error', 'errors': resume_form.errors})
+
+#         except json.JSONDecodeError:
+#             return JsonResponse({'status': 'error', 'message': 'Invalid JSON data'}, status=400)
+
+#         except IntegrityError:
+#             return JsonResponse({'status': 'error', 'message': 'Database integrity error'}, status=500)
+
+#         except OperationalError:
+#             return JsonResponse({'status': 'error', 'message': 'Database operational error'}, status=500)
+
+#         except Exception as e:
+#             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+#     else:
+#         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 def get_resume_detail_by_id(request, resume_id):
     try:
@@ -1389,6 +1450,102 @@ def save_screening_questions_and_answers(request):
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
+# @csrf_exempt
+# def submit_application_with_screening(request):
+#     if request.method == "POST":
+#         try:
+#             data = json.loads(request.body)
+
+#             email = data.get('email')
+#             skills = data.get('skills')
+#             must_have_qualification = data.get('must_have_qualification', False)
+
+#             answers = data.get('answers')
+#             if not answers:
+#                 return JsonResponse({"error": "Answers are missing"}, status=400)
+
+#             first_question_id = answers[0].get('question_id')
+#             if not first_question_id:
+#                 return JsonResponse({"error": "First question ID is missing"}, status=400)
+
+#             first_question = ScreeningQuestion.objects.filter(id=first_question_id).first()
+#             if not first_question:
+#                 return JsonResponse({"error": f"Invalid question_id: {first_question_id}"}, status=400)
+
+#             job = first_question.job  
+
+#             application = Application.objects.create(
+#                 job=job,
+#                 email=email,
+#                 skills=skills,
+#                 status="pending"
+#             )
+
+#             correct_answers = {
+#                 question.id: question.correct_answer
+#                 for question in ScreeningQuestion.objects.filter(job=job)
+#             }
+
+#             all_answers_correct = True
+
+#             for answer_data in answers:
+#                 question_id = answer_data.get('question_id')
+#                 answer_text = answer_data.get('answer')
+
+#                 if not question_id or not answer_text:
+#                     return JsonResponse({"error": "Question ID or answer is missing"}, status=400)
+
+#                 question = ScreeningQuestion.objects.filter(id=question_id, job=job).first()
+
+#                 if not question:
+#                     return JsonResponse({"error": f"Invalid question_id: {question_id}"}, status=400)
+
+#                 is_correct = (correct_answers.get(question.id) == answer_text)
+
+#                 ScreeningAnswer.objects.create(
+#                     application=application,
+#                     question=question,
+#                     answer_text=answer_text
+#                 )
+
+#                 if not is_correct:
+#                     all_answers_correct = False
+
+#             if all_answers_correct and must_have_qualification:
+#                 application.status = 'selected'
+#                 application.save()
+
+#                 email_subject = "Job Application Status"
+#                 email_body = f"Dear Applicant,\n\nYour application for the job {job.job_title} has been accepted."
+#                 send_mail(
+#                     email_subject,
+#                     email_body,
+#                     settings.EMAIL_HOST_USER,
+#                     [application.email],
+#                     fail_silently=False,
+#                 )
+#                 return JsonResponse({"message": "Application submitted successfully and applicant selected."}, status=201)
+
+#             else:
+#                 application.status = 'rejected'
+#                 application.save()
+
+#                 email_subject = "Job Application Status"
+#                 email_body = f"Dear Applicant,\n\nUnfortunately, your application for the job {job.job_title} has been rejected."
+#                 send_mail(
+#                     email_subject,
+#                     email_body,
+#                     settings.EMAIL_HOST_USER,
+#                     [application.email],
+#                     fail_silently=False,
+#                 )
+#                 return JsonResponse({"message": "Application submitted successfully and applicant rejected."}, status=201)
+
+#         except Exception as e:
+#             return JsonResponse({"error": str(e)}, status=400)
+
+#     return JsonResponse({"error": "Invalid request method"}, status=405)
+
 @csrf_exempt
 def submit_application_with_screening(request):
     if request.method == "POST":
@@ -1465,7 +1622,7 @@ def submit_application_with_screening(request):
                 )
                 return JsonResponse({"message": "Application submitted successfully and applicant selected."}, status=201)
 
-            else:
+            elif must_have_qualification and not all_answers_correct:
                 application.status = 'rejected'
                 application.save()
 
@@ -1480,10 +1637,89 @@ def submit_application_with_screening(request):
                 )
                 return JsonResponse({"message": "Application submitted successfully and applicant rejected."}, status=201)
 
+            elif not must_have_qualification and all_answers_correct:
+                application.status = 'above_list'
+                application.save()
+
+                return JsonResponse({"message": "Applicant moves to the above list."}, status=201)
+
+            elif not must_have_qualification and not all_answers_correct:
+                application.status = 'below_list'
+                application.save()
+
+                return JsonResponse({"message": "Applicant moves to the below list."}, status=201)
+
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
 
-    return JsonResponse({"error": "Invalid request method"}, status=405)
+    return JsonResponse({"error": "Invalid request method"}, status=405)    
+
+# @csrf_exempt
+# def myInbox(request):
+#     if request.method == "GET":
+#         try:
+#             email = request.GET.get('email')
+#             filter_value = request.GET.get('filter')
+
+#             if not email:
+#                 return JsonResponse({
+#                     'status': 'false',
+#                     'message': 'Email is required'
+#                 }, status=400)
+
+#             last_message_subquery = Message.objects.filter(
+#                 Q(sender__email=OuterRef('email'), recipient__email=email) |
+#                 Q(recipient__email=OuterRef('email'), sender__email=email)
+#             ).order_by('-id').values_list('id', flat=True)[:1]
+
+#             user_subquery = User.objects.filter(
+#                 Q(sender__recipient__email=email) | Q(recipient__sender__email=email)
+#             ).annotate(
+#                 last_msg=Subquery(last_message_subquery)
+#             ).values_list('last_msg', flat=True).order_by('-id')
+
+#             messages_query = Message.objects.filter(
+#                 id__in=Subquery(user_subquery)
+#             ).order_by('-id')
+
+#             if filter_value == 'read':
+#                 messages_query = messages_query.filter(is_read=True)
+#             elif filter_value == 'unread':
+#                 messages_query = messages_query.filter(is_read=False)
+#             elif filter_value == 'primary':
+#                 messages_query = messages_query.filter(is_primary=True)
+
+#             message_list = []
+#             for message in messages_query:
+#                 attachments = message.attachments.all()
+#                 attachment_list = [{
+#                     'id': attachment.id,
+#                     'file_url': attachment.file.url,
+#                     'uploaded_at': attachment.uploaded_at
+#                 } for attachment in attachments]
+
+#                 message_list.append({
+#                     'id': message.id,
+#                     'sender': message.sender.email,
+#                     'recipient': message.recipient.email,
+#                     'content': message.content,
+#                     'timestamp': message.timestamp,
+#                     'is_read': message.is_read,
+#                     'attachments': attachment_list
+#                 })
+
+#             return JsonResponse({
+#                 'status': 'success',
+#                 'messages': message_list
+#             }, status=200)
+        
+#         except Exception as e:
+#             return JsonResponse({
+#                 'status': 'false',
+#                 'error': str(e)
+#             }, status=500)
+    
+#     return JsonResponse({'status': 'false', 'message': 'Invalid request method'}, status=405)
 
 @csrf_exempt
 def myInbox(request):
@@ -1498,28 +1734,13 @@ def myInbox(request):
                     'message': 'Email is required'
                 }, status=400)
 
-            last_message_subquery = Message.objects.filter(
-                Q(sender__email=OuterRef('email'), recipient__email=email) |
-                Q(recipient__email=OuterRef('email'), sender__email=email)
-            ).order_by('-id').values_list('id', flat=True)[:1]
-
-            user_subquery = User.objects.filter(
-                Q(sender__recipient__email=email) | Q(recipient__sender__email=email)
-            ).annotate(
-                last_msg=Subquery(last_message_subquery)
-            ).values_list('last_msg', flat=True).order_by('-id')
-
-            messages_query = Message.objects.filter(
-                id__in=Subquery(user_subquery)
-            ).order_by('-id')
+            messages_query = Message.objects.filter( Q(sender__email=email) | Q(recipient__email=email) ).order_by('-timestamp')
 
             if filter_value == 'read':
                 messages_query = messages_query.filter(is_read=True)
             elif filter_value == 'unread':
                 messages_query = messages_query.filter(is_read=False)
-            elif filter_value == 'primary':
-                messages_query = messages_query.filter(is_primary=True)
-
+            
             message_list = []
             for message in messages_query:
                 attachments = message.attachments.all()

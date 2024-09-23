@@ -94,7 +94,7 @@ class Resume(models.Model):
     delete = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.name
+        return f"{self.first_name} {self.last_name}"
 
 class Objective(models.Model):
     resume = models.OneToOneField(Resume, related_name='objective', on_delete=models.CASCADE)
@@ -192,7 +192,10 @@ class Message(models.Model):
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False) 
-    is_primary=models.BooleanField(default=False)
+    # is_primary=models.BooleanField(default=False)
+    
+    def __str__(self):
+        return f"{self.sender.email} -> {self.recipient.email}"
 
     class Meta:
         ordering = ['timestamp']
@@ -201,6 +204,9 @@ class Attachment(models.Model):
     message = models.ForeignKey('Message', related_name='attachments', on_delete=models.CASCADE)
     file = models.FileField(upload_to='attachments/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Attachment for message {self.message.id}" 
     
 class Student(models.Model):
     first_name =  models.CharField(max_length=100, default='John')
