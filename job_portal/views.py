@@ -455,7 +455,7 @@ def create_resume(request):
                 resume_form = ResumeForm(request.POST, request.FILES, instance=resume)
             else:
                 resume_form = ResumeForm(request.POST, request.FILES)
-            
+
             print("Resume Form Validity:", resume_form.is_valid())
             if resume_form.is_valid():
                 resume = resume_form.save()
