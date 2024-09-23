@@ -406,7 +406,7 @@ def candidate_profile(request):
 def company_status(request, status_choice):
     try:
         co_name = request.GET['name']
-        
+
         try:
             company = Company.objects.get(name=co_name)
         except Company.DoesNotExist:
@@ -460,7 +460,7 @@ def create_resume(request):
             if resume_form.is_valid():
                 resume = resume_form.save()
 
-                delete_attachment = request.POST.get('delete', 'false').lower() == 'true'
+                delete_attachment = resume_form.cleaned_data.get('delete', False)
                 print("Delete Attachment:", delete_attachment)
 
                 if delete_attachment:
@@ -474,15 +474,15 @@ def create_resume(request):
                     else:
                         return JsonResponse({'status': 'error', 'message': 'No attachment to delete'}, status=400)
 
-                objective_data = request.POST.get('objective', {})
+                objective_data = resume_form.cleaned_data.get('objective', {})
                 if objective_data:
-                    objective_form = ObjectiveForm(json.loads(objective_data))
+                    objective_form = ObjectiveForm(objective_data)
                     if objective_form.is_valid():
                         objective = objective_form.save(commit=False)
                         objective.resume = resume
                         objective.save()
 
-                education_data = json.loads(request.POST.get('education', '[]'))
+                education_data = json.loads(resume_form.cleaned_data.get('education', '[]'))
                 for item in education_data:
                     education_form = EducationForm(item)
                     if education_form.is_valid():
@@ -490,7 +490,7 @@ def create_resume(request):
                         education.resume = resume
                         education.save()
 
-                experience_data = json.loads(request.POST.get('experience', '[]'))
+                experience_data = json.loads(resume_form.cleaned_data.get('experience', '[]'))
                 for item in experience_data:
                     experience_form = ExperienceForm(item)
                     if experience_form.is_valid():
@@ -498,7 +498,7 @@ def create_resume(request):
                         experience.resume = resume
                         experience.save()
 
-                project_data = json.loads(request.POST.get('projects', '[]'))
+                project_data = json.loads(resume_form.cleaned_data.get('projects', '[]'))
                 for item in project_data:
                     project_form = ProjectForm(item)
                     if project_form.is_valid():
@@ -506,7 +506,7 @@ def create_resume(request):
                         project.resume = resume
                         project.save()
 
-                reference_data = json.loads(request.POST.get('references', '[]'))
+                reference_data = json.loads(resume_form.cleaned_data.get('references', '[]'))
                 for item in reference_data:
                     reference_form = ReferenceForm(item)
                     if reference_form.is_valid():
@@ -514,7 +514,7 @@ def create_resume(request):
                         reference.resume = resume
                         reference.save()
 
-                certifications_data = json.loads(request.POST.get('certifications', '[]'))
+                certifications_data = json.loads(resume_form.cleaned_data.get('certifications', '[]'))
                 for item in certifications_data:
                     certifications_form = CertificationForm(item)
                     if certifications_form.is_valid():
@@ -522,7 +522,7 @@ def create_resume(request):
                         certifications.resume = resume
                         certifications.save()
 
-                achievements_data = json.loads(request.POST.get('achievements', '[]'))
+                achievements_data = json.loads(resume_form.cleaned_data.get('achievements', '[]'))
                 for item in achievements_data:
                     achievements_form = AchievementForm(item)
                     if achievements_form.is_valid():
@@ -530,7 +530,7 @@ def create_resume(request):
                         achievements.resume = resume
                         achievements.save()
 
-                publications_data = json.loads(request.POST.get('publications', '[]'))
+                publications_data = json.loads(resume_form.cleaned_data.get('publications', '[]'))
                 for item in publications_data:
                     publications_form = PublicationForm(item)
                     if publications_form.is_valid():
