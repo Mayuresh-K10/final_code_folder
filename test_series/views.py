@@ -164,55 +164,6 @@ def record_proctoring_event(request):
         return api_response(success=False, error='An error occurred while recording the event',
                                 details=str(e), status=500)
 
-# @csrf_exempt
-# @require_POST
-# @login_required
-# def submit_answer(request):
-#     try:
-#         form = SubmitAnswerForm(request.POST)
-#         if not form.is_valid():
-#             return api_response(success=False, error='Invalid data', status=400)
-
-#         session_id = form.cleaned_data['session_id']
-#         session = get_object_or_404(ProctoringSession.objects.only('id', 'exam'), id=session_id)
-
-#         question_no = form.cleaned_data['question_no']
-#         selected_option = form.cleaned_data['selected_option']
-#         clear_response = form.cleaned_data['clear_response']
-
-#         question = get_object_or_404(Question.objects.only('id', 'status', 'correct_option'), exam=session.exam, question_no=question_no)
-
-#         user_response = UserResponse.objects.filter(user=request.user, question=question, session=session)
-
-#         if clear_response:
-#             user_response.delete()
-#             return api_response(success=True, data={'message': 'Response cleared.'})
-
-#         if user_response.exists():
-#             return api_response(success=False, error='Answer already submitted', status=400)
-
-#         UserResponse.objects.create(
-#             user=request.user,
-#             question=question,
-#             session=session,
-#             selected_option=selected_option,
-#             response_time=timezone.now()
-#         )
-
-#         if question.status != 'Answered':
-#             question.status = 'Answered'
-#             question.save(update_fields=['status'])
-
-#         if selected_option == question.correct_option:
-#             user_score, created = UserScore.objects.get_or_create(user=request.user, exam=session.exam)
-#             user_score.score += 1
-#             user_score.save(update_fields=['score'])
-
-#         return api_response(success=True, data={'message': 'Answer submitted successfully'})
-
-#     except Exception as e:
-#         return api_response(success=False, error='An error occurred while submitting the answer', details=str(e), status=500)
-
 @csrf_exempt
 @require_POST
 @login_required
