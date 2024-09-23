@@ -945,7 +945,7 @@ def sort_saved_jobs(request):
 
         if category:
             jobs = jobs.filter(category=category)
-            
+
         if not (job_type or category):
             return JsonResponse({'error': 'Please select at least one filter: job_type or category'}, status=400)
 
