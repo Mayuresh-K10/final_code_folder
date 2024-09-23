@@ -1062,7 +1062,7 @@ def create_job_alert(request):
 
         if action is None:
             return JsonResponse({'status': 'error', 'message': 'Action parameter is missing'}, status=400)
-        
+
         if action == 'bookmark':
             return JsonResponse("Created Job Alerts Successfully", safe=False)
 
