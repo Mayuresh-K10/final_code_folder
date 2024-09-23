@@ -155,7 +155,7 @@ def record_proctoring_event(request):
             )
         except Exception as email_error:
             return api_response(success=True, data={'status': 'event recorded'},
-                                error='Failed to send email notification', 
+                                error='Failed to send email notification',
                                 details=str(email_error), status=500)
 
         return api_response(success=True, data={'status': 'event recorded'})

@@ -136,7 +136,7 @@ def handle_post_request(request):
         data['skills'] = ', '.join(unique_job_list)
 
     data['company'] = company.id
-    
+
     form = JobForm(data)
     if form.is_valid():
         job = form.save()
@@ -464,7 +464,7 @@ def create_resume(request):
                 print("Delete Attachment:", delete_attachment)
 
                 if delete_attachment:
-                    if resume.Attachment: 
+                    if resume.Attachment:
                         print("Attachment Path:", resume.Attachment.path)
                         if os.path.exists(resume.Attachment.path):
                             os.remove(resume.Attachment.path)

@@ -175,7 +175,7 @@ class Command(BaseCommand):
                         workplaceTypes=workplace_type,
                         location=location,
                         company=company
-                        
+
                     )
 
                 if job and status:
