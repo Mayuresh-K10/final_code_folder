@@ -1,4 +1,4 @@
-from django.db import IntegrityError, OperationalError
+from django.db import IntegrityError, OperationalError, transaction
 from django.shortcuts import get_object_or_404 # type: ignore
 from django.http import JsonResponse # type: ignore
 from django.middleware.csrf import get_token # type: ignore
@@ -321,7 +321,7 @@ class CompanyDetailView(View):
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
 
-    def put(self, request, pk):
+    def post(self, request, pk):
         try:
             company = Company.objects.get(pk=pk)
 
@@ -443,105 +443,83 @@ def company_status(request, status_choice):
 def create_resume(request):
     if request.method == 'POST':
         try:
-            user_email = request.POST.get('email')
-            print("User Email:", user_email)
-            if not user_email:
-                return JsonResponse({'status': 'error', 'message': 'Email is required'}, status=400)
+            with transaction.atomic():
+                user_email = request.POST.get('email')
+                print("User Email:", user_email)
 
-            resume = Resume.objects.filter(email=user_email).first()
-            print("Resume Object:", resume)
+                if not user_email:
+                    return JsonResponse({'status': 'error', 'message': 'Email is required'}, status=400)
 
-            if resume:
-                resume_form = ResumeForm(request.POST, request.FILES, instance=resume)
-            else:
-                resume_form = ResumeForm(request.POST, request.FILES)
+                resume = Resume.objects.filter(email=user_email).first()
+                print("Resume Object:", resume)
 
-            print("Resume Form Validity:", resume_form.is_valid())
-            if resume_form.is_valid():
-                resume = resume_form.save()
+                if resume:
+                    resume_form = ResumeForm(request.POST, request.FILES, instance=resume)
+                else:
+                    resume_form = ResumeForm(request.POST, request.FILES)
 
-                delete_attachment = resume_form.cleaned_data.get('delete', False)
-                print("Delete Attachment:", delete_attachment)
+                print("Resume Form Validity:", resume_form.is_valid())
 
-                if delete_attachment:
-                    if resume.Attachment:
-                        print("Attachment Path:", resume.Attachment.path)
+                if resume_form.is_valid():
+                    delete_attachment = request.POST.get('delete', 'false').lower() == 'true'
+                    new_attachment = request.FILES.get('Attachment')
+
+                    if new_attachment and resume and resume.Attachment:
                         if os.path.exists(resume.Attachment.path):
+                            print("Deleting old attachment:", resume.Attachment.path)
                             os.remove(resume.Attachment.path)
+
+                    resume = resume_form.save()
+
+                    if delete_attachment and resume.Attachment and os.path.exists(resume.Attachment.path):
+                        print("Attachment Path for Deletion:", resume.Attachment.path)
+                        os.remove(resume.Attachment.path)
                         resume.Attachment = None
                         resume.save()
                         return JsonResponse({'status': 'success', 'message': 'Attachment deleted successfully', 'resume_id': resume.id})
-                    else:
-                        return JsonResponse({'status': 'error', 'message': 'No attachment to delete'}, status=400)
 
-                objective_data = resume_form.cleaned_data.get('objective', {})
+                objective_data = request.POST.get('objective', '{}')
                 if objective_data:
-                    objective_form = ObjectiveForm(objective_data)
+                    objective_data = json.loads(objective_data)
+                    objective_instance = resume.objective if hasattr(resume, 'objective') else None
+
+                    if objective_instance:
+
+                        objective_form = ObjectiveForm(objective_data, instance=objective_instance)
+                    else:
+                        objective_form = ObjectiveForm(objective_data)
+
                     if objective_form.is_valid():
                         objective = objective_form.save(commit=False)
                         objective.resume = resume
                         objective.save()
 
-                education_data = json.loads(resume_form.cleaned_data.get('education', '[]'))
-                for item in education_data:
-                    education_form = EducationForm(item)
-                    if education_form.is_valid():
-                        education = education_form.save(commit=False)
-                        education.resume = resume
-                        education.save()
+                def save_related_data(form_class, data_list, related_name):
+                    for item in data_list:
+                        form = form_class(item)
+                        if form.is_valid():
+                            obj = form.save(commit=False)
+                            obj.resume = resume
+                            obj.save()
+                        else:
+                            print(f"{related_name} Form Errors:", form.errors)
 
-                experience_data = json.loads(resume_form.cleaned_data.get('experience', '[]'))
-                for item in experience_data:
-                    experience_form = ExperienceForm(item)
-                    if experience_form.is_valid():
-                        experience = experience_form.save(commit=False)
-                        experience.resume = resume
-                        experience.save()
+                save_related_data(EducationForm, json.loads(request.POST.get('education', '[]')), 'Education')
+                save_related_data(ExperienceForm, json.loads(request.POST.get('experience', '[]')), 'Experience')
+                save_related_data(ProjectForm, json.loads(request.POST.get('projects', '[]')), 'Projects')
+                save_related_data(ReferenceForm, json.loads(request.POST.get('references', '[]')), 'References')
+                save_related_data(CertificationForm, json.loads(request.POST.get('certifications', '[]')), 'Certifications')
+                save_related_data(AchievementForm, json.loads(request.POST.get('achievements', '[]')), 'Achievements')
+                save_related_data(PublicationForm, json.loads(request.POST.get('publications', '[]')), 'Publications')
 
-                project_data = json.loads(resume_form.cleaned_data.get('projects', '[]'))
-                for item in project_data:
-                    project_form = ProjectForm(item)
-                    if project_form.is_valid():
-                        project = project_form.save(commit=False)
-                        project.resume = resume
-                        project.save()
-
-                reference_data = json.loads(resume_form.cleaned_data.get('references', '[]'))
-                for item in reference_data:
-                    reference_form = ReferenceForm(item)
-                    if reference_form.is_valid():
-                        reference = reference_form.save(commit=False)
-                        reference.resume = resume
-                        reference.save()
-
-                certifications_data = json.loads(resume_form.cleaned_data.get('certifications', '[]'))
-                for item in certifications_data:
-                    certifications_form = CertificationForm(item)
-                    if certifications_form.is_valid():
-                        certifications = certifications_form.save(commit=False)
-                        certifications.resume = resume
-                        certifications.save()
-
-                achievements_data = json.loads(resume_form.cleaned_data.get('achievements', '[]'))
-                for item in achievements_data:
-                    achievements_form = AchievementForm(item)
-                    if achievements_form.is_valid():
-                        achievements = achievements_form.save(commit=False)
-                        achievements.resume = resume
-                        achievements.save()
-
-                publications_data = json.loads(resume_form.cleaned_data.get('publications', '[]'))
-                for item in publications_data:
-                    publications_form = PublicationForm(item)
-                    if publications_form.is_valid():
-                        publications = publications_form.save(commit=False)
-                        publications.resume = resume
-                        publications.save()
-
-                return JsonResponse({'status': 'success', 'message': 'Resume created successfully', 'resume_id': resume.id})
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'Resume created/updated successfully',
+                    'resume_id': resume.id
+                })
 
             print("Form Errors:", resume_form.errors)
-            return JsonResponse({'status': 'error', 'errors': resume_form.errors})
+            return JsonResponse({'status': 'error', 'errors': resume_form.errors}, status=400)
 
         except json.JSONDecodeError as e:
             print("JSONDecodeError:", str(e))
@@ -549,11 +527,11 @@ def create_resume(request):
 
         except IntegrityError as e:
             print("IntegrityError:", str(e))
-            return JsonResponse({'status': 'error', 'message': 'Database integrity error'}, status=500)
+            return JsonResponse({'status': 'error', 'message': 'Database integrity error', 'details': str(e)}, status=500)
 
         except OperationalError as e:
             print("OperationalError:", str(e))
-            return JsonResponse({'status': 'error', 'message': 'Database operational error'}, status=500)
+            return JsonResponse({'status': 'error', 'message': 'Database operational error', 'details': str(e)}, status=500)
 
         except Exception as e:
             print("General Exception:", str(e))
@@ -1314,13 +1292,13 @@ def submit_application_with_screening(request):
                 return JsonResponse({"message": "Application submitted successfully and applicant rejected."}, status=201)
 
             elif not must_have_qualification and all_answers_correct:
-                application.status = 'above_list'
+                application.status = 'pending'
                 application.save()
 
                 return JsonResponse({"message": "Applicant moves to the above list."}, status=201)
 
             elif not must_have_qualification and not all_answers_correct:
-                application.status = 'below_list'
+                application.status = 'pending'
                 application.save()
 
                 return JsonResponse({"message": "Applicant moves to the below list."}, status=201)
