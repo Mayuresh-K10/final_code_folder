@@ -460,9 +460,13 @@ def create_resume(request):
 
                 print("Resume Form Validity:", resume_form.is_valid())
 
+                # if resume_form.is_valid():
+                #     delete_attachment = request.POST.get('delete', 'false').lower() == 'true'
+                #     new_attachment = request.FILES.get('Attachment')
+
                 if resume_form.is_valid():
-                    delete_attachment = request.POST.get('delete', 'false').lower() == 'true'
-                    new_attachment = request.FILES.get('Attachment')
+                    delete_attachment = resume_form.cleaned_data.get('delete', False)
+                    new_attachment = resume_form.cleaned_data.get('Attachment')
 
                     if new_attachment and resume and resume.Attachment:
                         if os.path.exists(resume.Attachment.path):
