@@ -1,4 +1,4 @@
-from django.db import IntegrityError, OperationalError, transaction
+from django.db import DatabaseError, IntegrityError, OperationalError, transaction
 from django.shortcuts import get_object_or_404 # type: ignore
 from django.http import JsonResponse # type: ignore
 from django.middleware.csrf import get_token # type: ignore
@@ -6,8 +6,8 @@ from django.views.decorators.csrf import csrf_exempt, csrf_protect # type: ignor
 from django.utils import timezone # type: ignore
 from django.db.models import Q # type: ignore
 from rest_framework.response import Response # type: ignore
-from .models import CandidateStatus_rejected, CandidateStatus_under_review, Job, Application, Company,CandidateStatus_selected,CandidateStatus_not_eligible, Resume, ScreeningAnswer, ScreeningQuestion, Student, Message, Attachment
-from .forms import AchievementForm, CertificationForm, CompanyForm, EducationForm, ExperienceForm, JobForm, ApplicationForm, ObjectiveForm, ProjectForm, PublicationForm, ReferenceForm, ResumeForm, StudentForm
+from .models import CandidateStatus_rejected, CandidateStatus_under_review, Job, Application, Company,CandidateStatus_selected,CandidateStatus_not_eligible, MembershipPlan, Resume, ScreeningAnswer, ScreeningQuestion, Student, Message, Attachment, UserSubscription
+from .forms import AchievementForm, CancelSubscriptionForm,CertificationForm, CompanyForm, EducationForm, ExperienceForm, JobForm, ApplicationForm, ObjectiveForm, ProjectForm, PublicationForm, ReferenceForm, ResumeForm, StudentForm, SubscriptionForm
 import json, operator, os
 from datetime import timedelta
 from django.utils.decorators import method_decorator # type: ignore
@@ -20,6 +20,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
 
 def home(request):
     try:
@@ -1053,45 +1054,6 @@ def create_job_alert(request):
 
     return JsonResponse({'error': 'Invalid request method'}, status=405)
 
-# @csrf_exempt
-# def choose_plan(request):
-#     try:
-#         if request.method == 'POST':
-#             # print(f"POST Data: {request.POST}")
-#             form = ChoosePlanForm(request.POST)
-#             if form.is_valid():
-#                 plan_name = form.cleaned_data['plan_id']
-#                 plan = MembershipPlan.objects.get(name=plan_name)
-#                 # print(f"Plan ID: {plan}")
-
-#                 user_subscription, created = UserSubscription.objects.get_or_create(user=request.user)
-#                 user_subscription.current_plan = plan
-#                 user_subscription.subscription_date = timezone.now()
-#                 user_subscription.renewal_date = timezone.now() + timezone.timedelta(days=30)
-#                 user_subscription.save()
-
-#                 return JsonResponse({
-#                     'status': 'success',
-#                     'message': f'Successfully subscribed to the {plan.name} plan.',
-#                     'plan': {
-#                         'name': plan.name,
-#                         'price': plan.price,
-#                         'job_postings': plan.job_postings,
-#                         'featured_jobs': plan.featured_jobs,
-#                         'post_duration': plan.post_duration
-#                     }
-#                 })
-#             else:
-#                 # print(f"Form errors: {form.errors}")
-#                 return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
-#         return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
-
-#     except MembershipPlan.DoesNotExist:
-#         return JsonResponse({'status': 'error', 'message': 'Plan not found.'}, status=404)
-#     except Exception as e:
-#         # print(f"Exception: {e}")
-#         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-
 def company_status_counts(request):
     company_name = request.GET.get('company_name')
 
@@ -1491,3 +1453,84 @@ def searchUser(request):
                 'status': 'success',
                 'contacts': contact_list
             }, status=200)
+ 
+@csrf_exempt
+@login_required
+def choose_plan(request):
+    try:
+        subscription, created = UserSubscription.objects.get_or_create(user=request.user)
+
+        if request.method == 'POST':
+            form = SubscriptionForm(request.POST)
+            if form.is_valid():
+                plan_id = form.cleaned_data['plan']  
+                membership_plan = MembershipPlan.objects.get(id=plan_id)  
+
+                subscription.current_plan = membership_plan
+                subscription.save()
+
+                return JsonResponse({'message': 'Subscription plan updated successfully'}, status=200)
+            else:
+                return JsonResponse({'errors': form.errors}, status=400)
+        else:
+            initial_plan = subscription.current_plan if subscription.current_plan in MembershipPlan.objects.all() else None
+            form = SubscriptionForm(initial={'plan': initial_plan})
+
+            plan_choices = [{'id': plan.id, 'name': plan.name} for plan in form.fields['plan'].queryset]
+
+            return JsonResponse({
+                'message': 'Choose a plan',
+                'current_plan': subscription.current_plan.name if subscription.current_plan else None,
+                'plan_choices': plan_choices
+            })
+
+    except DatabaseError as db_err:
+        return JsonResponse({'error': 'Database error occurred', 'details': str(db_err)}, status=500)
+    except MembershipPlan.DoesNotExist:
+        return JsonResponse({'error': 'Selected plan does not exist'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': 'An unexpected error occurred', 'details': str(e)}, status=500)
+
+@csrf_exempt
+@login_required
+def cancel_plan(request):
+    try:
+        subscription = get_object_or_404(UserSubscription, user=request.user)
+
+        if request.method == 'POST':
+            form = CancelSubscriptionForm(request.POST)
+            if form.is_valid():
+                form.cancel_subscription(user=request.user)
+                return JsonResponse({'message': 'Subscription cancelled successfully'}, status=200)
+            else:
+                return JsonResponse({'errors': form.errors}, status=400)
+        else:
+            return JsonResponse({
+                'message': 'Confirm cancellation',
+                'current_plan': subscription.current_plan.name if subscription.current_plan else 'No Plan',
+                'active': subscription.active
+            })
+
+    except DatabaseError as db_err:
+        return JsonResponse({'error': 'Database error occurred', 'details': str(db_err)}, status=500)
+    except Exception as e:
+        return JsonResponse({'error': 'An unexpected error occurred', 'details': str(e)}, status=500)
+
+@login_required
+def subscription_detail(request):
+    try:
+        subscription = get_object_or_404(UserSubscription, user=request.user)
+
+        subscription_data = {
+            'plan_name': subscription.current_plan.name if subscription.current_plan else 'No Plan',
+            'renewal_date': subscription.renewal_date,
+            'active': subscription.active,
+        }
+
+        return JsonResponse(subscription_data, status=200)
+
+    except DatabaseError as db_err:
+        return JsonResponse({'error': 'Database error occurred', 'details': str(db_err)}, status=500)
+    except Exception as e:
+        return JsonResponse({'error': 'An unexpected error occurred', 'details': str(e)}, status=500)
+

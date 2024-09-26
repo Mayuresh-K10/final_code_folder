@@ -214,35 +214,6 @@ class Student(models.Model):
     qualification = models.TextField(default='N/A')
     skills = models.TextField(default='Not specified')
 
-# class MembershipPlan(models.Model):
-#     PLAN_CHOICES = [
-#         ('Standard', 'Standard'),
-#         ('Gold', 'Gold'),
-#         ('Diamond', 'Diamond'),
-#     ]
-
-#     name = models.CharField(max_length=50, choices=PLAN_CHOICES)
-#     price = models.DecimalField(max_digits=6, decimal_places=2)
-#     job_postings = models.IntegerField()
-#     featured_jobs = models.IntegerField()
-#     post_duration = models.IntegerField(help_text="Job post live duration in days")
-
-#     def __str__(self):
-#         return self.name
-
-# class UserSubscription(models.Model):
-#     user = models.OneToOneField(User, on_delete=models.CASCADE)
-#     current_plan = models.ForeignKey(MembershipPlan, on_delete=models.SET_NULL, null=True, blank=True)
-#     subscription_date = models.DateTimeField(default=timezone.now)
-#     renewal_date = models.DateTimeField()
-
-#     def is_active(self):
-#         return timezone.now() < self.renewal_date
-
-#     def __str__(self):
-#         return f'{self.user.username} - {self.current_plan.name}'
-
-
 class ScreeningQuestion(models.Model):
     job = models.ForeignKey(Job, related_name='screening_questions', on_delete=models.CASCADE)
     question_text = models.TextField()
@@ -258,5 +229,40 @@ class ScreeningAnswer(models.Model):
 
     def __str__(self):
         return f"Answer for {self.question.question_text[:50]}"
+
+class MembershipPlan(models.Model):
+    PLAN_CHOICES = [
+        ('standard', 'Standard'),
+        ('gold', 'Gold'),
+        ('diamond', 'Diamond'),
+    ]
+
+    name = models.CharField(max_length=20, choices=PLAN_CHOICES, unique=True)
+    price = models.DecimalField(max_digits=6, decimal_places=2, default=0.00)
+    job_postings = models.PositiveIntegerField(default=0)
+    featured_jobs = models.PositiveIntegerField(default=0)
+    job_duration_days = models.PositiveIntegerField(default=30)
+
+    def __str__(self):
+        return self.get_name_display()
+
+class UserSubscription(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    current_plan = models.ForeignKey(MembershipPlan, on_delete=models.SET_NULL, null=True, blank=True)
+    renewal_date = models.DateField(default=timezone.now)
+    active = models.BooleanField(default=True)
+    plan = models.CharField(max_length=15, default='Standard')
+
+    def cancel_subscription(self):
+        self.active = False
+        self.save()
+
+    def renew_subscription(self):
+        if self.current_plan:
+            self.renewal_date = timezone.now() + timezone.timedelta(days=30)
+            self.save()
+
+    def __str__(self):
+        return f"{self.user.username} - {self.current_plan.name if self.current_plan else 'No Plan'}"
 
 

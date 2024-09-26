@@ -1,5 +1,6 @@
 from django import forms # type: ignore
-from .models import Achievements, Certification, Education, Experience, Job, Application, Company, Objective, Project, Publications, Reference, Resume, Student, Attachment, Message
+from .models import Achievements, Certification, Education, Experience, Job, Application, Company, MembershipPlan, Objective, Project, Publications, Reference, Resume, Student, Attachment, Message, UserSubscription
+from django.utils import timezone
 
 class JobForm(forms.ModelForm):
     class Meta:
@@ -76,33 +77,6 @@ class StudentForm(forms.ModelForm):
         model = Student
         fields = ['first_name', 'last_name', 'email', 'contact_no', 'qualification','skills']
 
-# class ChoosePlanForm(forms.Form):
-#     plan_id = forms.ModelChoiceField(
-#         queryset=MembershipPlan.objects.all(),
-#         label="Plan",
-#         widget=forms.Select(attrs={'class': 'form-control'})
-#     )
-
-# class ChoosePlanForm(forms.Form):
-
-#    PLAN_CHOICES = [
-#     ('Standard', 'Standard'),
-#     ('Gold', 'Gold'),
-#     ('Diamond', 'Diamond'),
-# ]
-
-#    plan_id = forms.ChoiceField(
-#    choices=PLAN_CHOICES,
-#    label="Plan",
-#    widget=forms.Select(attrs={'class': 'form-control'})
-# )
-
-# class CancelSubscriptionForm(forms.Form):
-#     confirm_cancel = forms.BooleanField(
-#         label="Confirm Cancel",
-#         required=True
-#     )
-
 class Messageform(forms.ModelForm):
      class Meta:
         model = Message
@@ -112,3 +86,41 @@ class Attachmentform(forms.ModelForm):
      class Meta:
         model = Attachment
         fields = '__all__'
+
+class SubscriptionForm(forms.ModelForm):
+    class Meta:
+        model = UserSubscription
+        fields = ['plan']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['plan'].queryset = MembershipPlan.objects.all() 
+
+    def save(self, user):
+        subscription, created = UserSubscription.objects.get_or_create(user=user)
+
+        selected_plan = self.cleaned_data['current_plan']
+        subscription.current_plan = selected_plan
+        subscription.renewal_date = timezone.now() + timezone.timedelta(days=30)  
+        subscription.active = True
+        subscription.save()
+        return subscription
+
+class CancelSubscriptionForm(forms.Form):
+    confirm_cancel = forms.BooleanField(
+        label="Are you sure you want to cancel your subscription?",
+        required=True
+    )
+
+    def cancel_subscription(self, user):
+        subscription = UserSubscription.objects.get(user=user)
+        if subscription.active:
+            subscription.cancel_subscription()
+            
+class Membershipform(forms.ModelForm):
+    class Meta:
+        model = MembershipPlan
+        fields = '__all__'
+
+
+
