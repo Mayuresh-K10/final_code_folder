@@ -1453,18 +1453,18 @@ def searchUser(request):
                 'status': 'success',
                 'contacts': contact_list
             }, status=200)
- 
+
 @csrf_exempt
 @login_required
 def choose_plan(request):
     try:
-        subscription, created = UserSubscription.objects.get_or_create(user=request.user)
+        subscription = UserSubscription.objects.get_or_create(user=request.user)
 
         if request.method == 'POST':
             form = SubscriptionForm(request.POST)
             if form.is_valid():
-                plan_id = form.cleaned_data['plan']  
-                membership_plan = MembershipPlan.objects.get(id=plan_id)  
+                plan_id = form.cleaned_data['plan']
+                membership_plan = MembershipPlan.objects.get(id=plan_id)
 
                 subscription.current_plan = membership_plan
                 subscription.save()

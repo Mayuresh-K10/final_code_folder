@@ -94,14 +94,14 @@ class SubscriptionForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['plan'].queryset = MembershipPlan.objects.all() 
+        self.fields['plan'].queryset = MembershipPlan.objects.all()
 
     def save(self, user):
-        subscription, created = UserSubscription.objects.get_or_create(user=user)
+        subscription = UserSubscription.objects.get_or_create(user=user)
 
         selected_plan = self.cleaned_data['current_plan']
         subscription.current_plan = selected_plan
-        subscription.renewal_date = timezone.now() + timezone.timedelta(days=30)  
+        subscription.renewal_date = timezone.now() + timezone.timedelta(days=30)
         subscription.active = True
         subscription.save()
         return subscription
@@ -116,7 +116,7 @@ class CancelSubscriptionForm(forms.Form):
         subscription = UserSubscription.objects.get(user=user)
         if subscription.active:
             subscription.cancel_subscription()
-            
+
 class Membershipform(forms.ModelForm):
     class Meta:
         model = MembershipPlan
