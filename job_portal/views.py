@@ -6,8 +6,8 @@ from django.views.decorators.csrf import csrf_exempt, csrf_protect # type: ignor
 from django.utils import timezone # type: ignore
 from django.db.models import Q # type: ignore
 from rest_framework.response import Response # type: ignore
-from .models import CandidateStatus_rejected, CandidateStatus_under_review, Job, Application, Company,CandidateStatus_selected,CandidateStatus_not_eligible, MembershipPlan, Resume, ScreeningAnswer, ScreeningQuestion, Student, Message, Attachment, UserSubscription
-from .forms import AchievementForm, CancelSubscriptionForm,CertificationForm, CompanyForm, EducationForm, ExperienceForm, JobForm, ApplicationForm, ObjectiveForm, ProjectForm, PublicationForm, ReferenceForm, ResumeForm, StudentForm, SubscriptionForm
+from .models import Application1, CandidateStatus_rejected, CandidateStatus_under_review, College, Job, Application, Company,CandidateStatus_selected,CandidateStatus_not_eligible, Job1, MembershipPlan, Resume, ScreeningAnswer, ScreeningQuestion, Student, Message, Attachment, StudentEnquiry, UserSubscription, Visitor
+from .forms import AchievementForm, Application1Form, CancelSubscriptionForm,CertificationForm, CollegeForm, CompanyForm, EducationForm, ExperienceForm, Job1Form, JobForm, ApplicationForm, ObjectiveForm, ProjectForm, PublicationForm, ReferenceForm, ResumeForm, StudentForm, SubscriptionForm, VisitorRegistrationForm
 import json, operator, os
 from datetime import timedelta
 from django.utils.decorators import method_decorator # type: ignore
@@ -21,6 +21,9 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth import authenticate
+from django.contrib.auth.hashers import check_password
 
 def home(request):
     try:
@@ -35,7 +38,7 @@ def get_csrf_token(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
-@csrf_protect
+@csrf_exempt
 def job_list(request):
     try:
         if request.method == 'GET':
@@ -197,31 +200,43 @@ def job_detail(request, job_id):
 
 @csrf_exempt
 def apply_job(request, job_id):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+
     try:
-        json_data = json.loads(request.POST.get('data'))
+        json_data = json.loads(request.POST.get('data', '{}'))
         job = get_object_or_404(Job, id=job_id)
-        if request.method == 'POST':
-            form = ApplicationForm(json_data, request.FILES)
-            if form.is_valid():
-                application = form.save(commit=False)
-                application.job = job
-                job_skills = set(job.skills.split(', '))
-                candidate_skills = set(application.skills.split(', '))
-                cand_skills = ', '.join(candidate_skills)
-                application.skills = cand_skills
 
-                if not job_skills.intersection(candidate_skills):
-                    return JsonResponse({'message': 'Candidate is not eligible to apply'}, status=404)
+        email = json_data.get('email')
+        if not email:
+            return JsonResponse({'error': 'Email is required'}, status=400)
 
-                application.save()
-                return JsonResponse({'message': 'Application submitted successfully', 'application_id': application.id}, status=201)
-            return JsonResponse({'errors': form.errors}, status=400)
-        else:
-            return JsonResponse({'error': 'Method not allowed'}, status=405)
+        if Application.objects.filter(Q(email=email) & Q(job=job)).exists():
+            return JsonResponse({'error': 'An application with this email already exists for this job.'}, status=400)
+
+        form = ApplicationForm(json_data, request.FILES)
+        if form.is_valid():
+            application = form.save(commit=False)
+            application.job = job
+
+            job_skills = set(job.skills.split(', '))
+            candidate_skills = set(json_data.get('skills', '').split(', '))
+            application.skills = ', '.join(candidate_skills)
+
+            if not job_skills.intersection(candidate_skills):
+                return JsonResponse({'message': 'Candidate is not eligible to apply'}, status=404)
+
+            application.save()
+            return JsonResponse({'message': 'Application submitted successfully', 'application_id': application.id}, status=201)
+
+        return JsonResponse({'errors': form.errors}, status=400)
+
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON data'}, status=400)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-@csrf_protect
+@csrf_exempt
 def job_applications(request, job_id):
     try:
         job = get_object_or_404(Job, id=job_id)
@@ -852,11 +867,13 @@ def application_status_counts(request):
         if not email:
             return JsonResponse({'error': 'Email parameter is required'}, status=400)
 
+        total_jobs_applied_count = Application.objects.filter(email=email).count()
         pending_count = Application.objects.filter(email=email, status='pending').count()
         interview_scheduled_count = Application.objects.filter(email=email, status='interview_scheduled').count()
         rejected_count = Application.objects.filter(email=email, status='rejected').count()
 
         return JsonResponse({
+            'total_jobs_applied':total_jobs_applied_count,
             'pending_count': pending_count,
             'interview_scheduled': interview_scheduled_count,
             'rejected_count': rejected_count
@@ -1458,7 +1475,7 @@ def searchUser(request):
 @login_required
 def choose_plan(request):
     try:
-        subscription = UserSubscription.objects.get_or_create(user=request.user)
+        subscription, _ = UserSubscription.objects.get_or_create(user=request.user)
 
         if request.method == 'POST':
             form = SubscriptionForm(request.POST)
@@ -1533,4 +1550,486 @@ def subscription_detail(request):
         return JsonResponse({'error': 'Database error occurred', 'details': str(db_err)}, status=500)
     except Exception as e:
         return JsonResponse({'error': 'An unexpected error occurred', 'details': str(e)}, status=500)
+    
+# @method_decorator(csrf_exempt, name='dispatch')
+# class CollegeListCreateView(View):
+#     def get(self, request):
+#         try:
+#             colleges = list(College.objects.all().values())
+#             return JsonResponse(colleges, safe=False, status=200)
+#         except Exception as e:
+#             return JsonResponse({'error': str(e)}, status=500)
 
+#     def post(self, request):
+#         try:
+#             college_email = request.POST.get('email')
+#             if not college_email:
+#                 return JsonResponse({'status': 'error', 'message': 'Email is required'}, status=400)
+
+#             college = College.objects.filter(email=college_email).first()
+
+#             if college:
+#                 college_form = CollegeForm(request.POST, request.FILES, instance=college)
+#             else:
+#                 college_form = CollegeForm(request.POST, request.FILES)
+
+#             if college_form.is_valid():
+#                 college = college_form.save()
+
+#                 delete_attachment = request.POST.get('is_deleted', 'false').lower() == 'true'
+#                 if delete_attachment and college.Attachment:
+#                     if os.path.exists(college.Attachment.path):
+#                         os.remove(college.Attachment.path)
+#                     college.Attachment = None
+#                     college.save()
+
+#                     return JsonResponse({'status': 'success', 'message': 'Attachment deleted successfully', 'college_id': college.id}, status=200)
+
+#                 return JsonResponse({'status': 'success', 'message': 'College created successfully', 'college_id': college.id}, status=201)
+#             else:
+#                 return JsonResponse(college_form.errors, status=400)
+
+#         except Exception as e:
+#             return JsonResponse({'error': str(e)}, status=500)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class CollegeListCreateView(View):
+
+    def get(self, request):
+        try:
+            colleges = list(College.objects.values_list('id', 'college_name', 'email', 'Attachment'))  # Optimize query
+            return JsonResponse(colleges, safe=False, status=200)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+    def post(self, request):
+        try:
+            college_email = request.POST.get('email')
+            if not college_email:
+                return JsonResponse({'status': 'error', 'message': 'Email is required'}, status=400)
+
+            college = College.objects.filter(email=college_email).first()
+            college_form = CollegeForm(request.POST, request.FILES, instance=college if college else None)
+
+            if college_form.is_valid():
+                college = college_form.save()
+
+                if request.POST.get('is_deleted', 'false').lower() == 'true' and college.Attachment:
+                    attachment_path = college.Attachment.path
+                    if os.path.exists(attachment_path):
+                        os.remove(attachment_path)
+                    college.Attachment = None
+                    college.save(update_fields=['Attachment'])
+
+                    return JsonResponse({'status': 'success', 'message': 'Attachment deleted successfully', 'college_id': college.id}, status=200)
+
+                return JsonResponse({'status': 'success', 'message': 'College created successfully', 'college_id': college.id}, status=201)
+            else:
+                return JsonResponse(college_form.errors, status=400)
+
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+        
+# @csrf_exempt
+# def submit_enquiry(request, college_id):
+#     if request.method == 'POST':
+#         try:
+#             data = json.loads(request.body)
+#         except json.JSONDecodeError:
+#             return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+#         first_name = data.get('first_name')
+#         last_name = data.get('last_name')
+#         email = data.get('email')
+#         mobile_number = data.get('mobile_number')
+#         password = data.get('password')
+
+#         if not all([first_name, last_name, email, mobile_number, password]):
+#             return JsonResponse({'error': 'All fields are required'}, status=400)
+
+#         try:
+#             college = College.objects.get(id=college_id)
+#         except College.DoesNotExist:
+#             return JsonResponse({'error': 'Invalid college ID'}, status=400)
+
+#         if StudentEnquiry.objects.filter(email=email, college=college).exists():
+#             return JsonResponse({'error': 'An enquiry with this email has already been submitted for this college.'}, status=400)
+
+#         hashed_password = make_password(password)
+
+#         try:
+#             enquiry = StudentEnquiry.objects.create(
+#                 first_name=first_name,
+#                 last_name=last_name,
+#                 email=email,
+#                 mobile_number=mobile_number,
+#                 password=hashed_password,
+#                 college=college  
+#             )
+#             return JsonResponse({'message': 'Enquiry submitted successfully','enquiry_id' : enquiry.id}, status=201)
+#         except IntegrityError:
+#             return JsonResponse({'error': 'Error while saving enquiry. Please try again.'}, status=400)
+
+#     return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+@csrf_exempt
+def submit_enquiry(request, college_id):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    required_fields = ['first_name', 'last_name', 'email', 'mobile_number', 'password','course']
+    if not all(data.get(field) for field in required_fields):
+        return JsonResponse({'error': 'All fields are required'}, status=400)
+
+    first_name, last_name, email, mobile_number, password, course = (
+        data['first_name'], data['last_name'], data['email'], data['mobile_number'], data['password'], data['course']
+    )
+
+    try:
+        college = College.objects.get(id=college_id)
+    except College.DoesNotExist:
+        return JsonResponse({'error': 'Invalid college ID'}, status=400)
+
+    if StudentEnquiry.objects.filter(email=email, college=college).exists():
+        return JsonResponse({'error': 'An enquiry with this email has already been submitted for this college.'}, status=400)
+
+    hashed_password = make_password(password)
+
+    try:
+        enquiry = StudentEnquiry.objects.create(
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            mobile_number=mobile_number,
+            password=hashed_password,
+            course=course,
+            college=college
+        )
+        return JsonResponse({'message': 'Enquiry submitted successfully', 'enquiry_id': enquiry.id}, status=201)
+    except IntegrityError:
+        return JsonResponse({'error': 'Error while saving enquiry. Please try again.'}, status=400)
+
+# @csrf_exempt
+# def college_status_counts(request):
+#     try:
+#         college_id = request.GET.get('college_id')
+
+#         if not college_id:
+#             return JsonResponse({'error': 'college_id is required'}, status=400)
+
+#         enquiry_count = StudentEnquiry.objects.filter(college_id=college_id).count()
+#         job_posted = Job1.objects.filter(college_id=college_id).count()
+#         total_visitor = Visitor.objects.filter(college_id=college_id).count()
+#         shortlisted_count = Application1.objects.filter(job__college_id=college_id, status='shortlisted').count()
+
+        
+#         return JsonResponse({
+#             'total_visitor_count' : total_visitor,
+#             'shortlisted_count': shortlisted_count,
+#             'job_posted_count' : job_posted,
+#             'enquiry_count': enquiry_count
+            
+#         }, status=200)
+
+#     except ValueError:
+#         return JsonResponse({'error': 'Invalid college_id. It must be an integer.'}, status=400)
+
+#     except StudentEnquiry.DoesNotExist:
+#         return JsonResponse({'error': f'No enquiries found for College ID {college_id}'}, status=404)
+
+#     except Exception as e:
+#         return JsonResponse({'error': str(e)}, status=500)
+
+@csrf_exempt
+def college_status_counts(request):
+    college_id = request.GET.get('college_id')
+    
+    if not college_id:
+        return JsonResponse({'error': 'college_id is required'}, status=400)
+    
+    try:
+        college_id = int(college_id)
+    except ValueError:
+        return JsonResponse({'error': 'Invalid college_id. It must be an integer.'}, status=400)
+
+    try:
+        enquiry_count = StudentEnquiry.objects.filter(college_id=college_id).count()
+        job_posted_count = Job1.objects.filter(college_id=college_id).count()
+        total_visitor_count = Visitor.objects.filter(college_id=college_id).count()
+        shortlisted_count = Application1.objects.filter(job__college_id=college_id, status='shortlisted').count()
+
+        return JsonResponse({
+            'total_visitor_count': total_visitor_count,
+            'shortlisted_count': shortlisted_count,
+            'job_posted_count': job_posted_count,
+            'enquiry_count': enquiry_count
+        }, status=200)
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@csrf_exempt
+def create_job_for_college(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+
+            college_id = data.get('college')
+            if not college_id:
+                return JsonResponse({'error': 'College ID is required'}, status=400)
+
+            try:
+                college = College.objects.get(id=college_id)
+            except College.DoesNotExist:
+                return JsonResponse({'error': 'College not found'}, status=404)
+
+            form = Job1Form(data)
+            if form.is_valid():
+                jobs = form.save(commit=False)
+                jobs.college = college  
+                jobs.save()  
+
+                promoting_job = data.get('promoting_job', '').lower()
+                if promoting_job == 'true':
+                    return JsonResponse({'message': 'Job Created Successfully with Promoting', 'job_id': jobs.id}, status=201)
+                elif promoting_job == 'false':
+                    return JsonResponse({'message': 'Job Created Successfully without Promoting', 'job_id': jobs.id}, status=201)
+                else:
+                    return JsonResponse({'error': 'Please specify if the job is promoting or not'}, status=400)
+
+            else:
+                return JsonResponse({'error': 'Invalid form data', 'errors': form.errors}, status=400)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON format'}, status=400)
+
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+    return JsonResponse({'error': 'Invalid request method. Use POST.'}, status=405)
+
+# @csrf_exempt
+# def apply__college_job(request, job_id):
+#     try:
+#         json_data = json.loads(request.POST.get('data'))
+#         job = get_object_or_404(Job1, id=job_id)
+#         if request.method == 'POST':
+#             form = Application1Form(json_data, request.FILES)
+#             if form.is_valid():
+#                 application = form.save(commit=False)
+#                 application.job = job
+#                 job_skills = set(job.skills.split(', '))
+#                 candidate_skills = set(application.skills.split(', '))
+#                 cand_skills = ', '.join(candidate_skills)
+#                 application.skills = cand_skills
+
+#                 if not job_skills.intersection(candidate_skills):
+#                     return JsonResponse({'message': 'Candidate is not eligible to apply'}, status=404)
+
+#                 application.save()
+#                 return JsonResponse({'message': 'Application submitted successfully', 'application_id': application.id}, status=201)
+#             return JsonResponse({'errors': form.errors}, status=400)
+#         else:
+#             return JsonResponse({'error': 'Method not allowed'}, status=405)
+#     except Exception as e:
+#         return JsonResponse({'error': str(e)}, status=500)
+
+@csrf_exempt
+def apply__college_job(request, job_id):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+    try:
+        json_data = json.loads(request.POST.get('data', '{}'))
+        job = get_object_or_404(Job1, id=job_id)
+
+        email = json_data.get('email')
+        if not email:
+            return JsonResponse({'error': 'Email is required'}, status=400)
+
+        if Application1.objects.filter(Q(email=email) & Q(job=job)).exists():
+            return JsonResponse({'error': 'An application with this email already exists for this job.'}, status=400)
+
+        form = Application1Form(json_data, request.FILES)
+        if form.is_valid():
+            application = form.save(commit=False)
+            application.job = job
+
+            job_skills = set(job.skills.split(', '))
+            candidate_skills = set(json_data.get('skills', '').split(', '))
+            application.skills = ', '.join(candidate_skills)
+
+            if not job_skills.intersection(candidate_skills):
+                return JsonResponse({'message': 'Candidate is not eligible to apply'}, status=404)
+
+            application.save()
+            return JsonResponse({'message': 'Application submitted successfully', 'application_id': application.id}, status=201)
+
+        return JsonResponse({'errors': form.errors}, status=400)
+
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+# @csrf_exempt
+# def register_visitor(request, college_id):
+#     if request.method == "POST":
+#         data = json.loads(request.body.decode('utf-8'))  
+
+#         try:
+#             college = College.objects.get(id=college_id)
+#         except College.DoesNotExist:
+#             return JsonResponse({'error': 'Invalid college ID'}, status=400)
+
+#         email = data.get('email')
+        
+#         try:
+#             if Visitor.objects.filter(email=email, college=college).exists():
+#                 return JsonResponse({'error': 'Visitor already registered'}, status=400)
+#         except Exception as e:
+#             return JsonResponse({'error': str(e)}, status=500)
+
+#         form = VisitorRegistrationForm(data=data)
+
+#         try:
+#             if form.is_valid():
+#                 visitor = form.save(commit=False)
+                
+#                 password = data.get('password')
+#                 hashed_password = make_password(password)
+#                 visitor.password = hashed_password
+#                 visitor.college = college 
+                
+#                 visitor.save() 
+
+#                 return JsonResponse({'message': 'Visitor registered successfully'}, status=201)
+#             else:
+#                 return JsonResponse({'error': form.errors}, status=400)
+#         except Exception as e:
+#             return JsonResponse({'error': str(e)}, status=500)
+
+#     else:
+#         return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+@csrf_exempt
+def register_visitor(request, college_id):
+    if request.method != "POST":
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        college = get_object_or_404(College, id=college_id)
+
+        email = data.get('email')
+        if not email:
+            return JsonResponse({'error': 'Email is required'}, status=400)
+
+        if Visitor.objects.filter(email=email, college=college).exists():
+            return JsonResponse({'error': 'Visitor already registered'}, status=400)
+
+        form = VisitorRegistrationForm(data=data)
+        if form.is_valid():
+            visitor = form.save(commit=False)
+            visitor.password = make_password(data.get('password'))
+            visitor.college = college
+            visitor.save()
+
+            return JsonResponse({'message': 'Visitor registered successfully'}, status=201)
+        else:
+            return JsonResponse({'error': form.errors}, status=400)
+
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON format'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+# @csrf_exempt
+# def login_visitor(request):
+#     if request.method == "POST":
+#         try:
+#             data = json.loads(request.body.decode('utf-8'))  
+#             email = data.get('email')
+#             password = data.get('password')
+
+#             try:
+#                 visitor = Visitor.objects.get(email=email)
+#             except Visitor.DoesNotExist:
+#                 return JsonResponse({'error': 'Visitor not found'}, status=404)
+
+#             if check_password(password, visitor.password):
+#                 return JsonResponse({'message': 'Login successful'}, status=200)
+#             else:
+#                 return JsonResponse({'error': 'Invalid credentials'}, status=400)
+
+#         except json.JSONDecodeError:
+#             return JsonResponse({'error': 'Invalid JSON'}, status=400)
+#         except Exception as e:
+#             return JsonResponse({'error': str(e)}, status=500)
+    
+#     else:
+#         return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+@csrf_exempt
+def login_visitor(request):
+    if request.method != "POST":
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        email = data.get('email')
+        password = data.get('password')
+
+        if not email or not password:
+            return JsonResponse({'error': 'Email and password are required'}, status=400)
+
+        visitor = get_object_or_404(Visitor, email=email)
+
+        if check_password(password, visitor.password):
+            return JsonResponse({'message': 'Login successful'}, status=200)
+        else:
+            return JsonResponse({'error': 'Invalid credentials'}, status=400)
+
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON format'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@csrf_exempt    
+def college_jobs_api(request, college_id):
+    try:
+        jobs = Job1.objects.filter(college_id=college_id).values('job_title', 'location', 'job_status')
+
+        if not jobs:
+            return JsonResponse({"message": "No jobs found for the given college ID"}, status=404)
+
+        return JsonResponse(list(jobs), safe=False, status=200)
+
+    except ObjectDoesNotExist:
+        return JsonResponse({"error": "Invalid college ID"}, status=400)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+@csrf_exempt    
+def student_enquiries(request, college_id):
+    try:
+        jobs = StudentEnquiry.objects.filter(college_id=college_id).values('first_name','last_name','course','status')
+
+        if not jobs:
+            return JsonResponse({"message": "No enquiries found for the given college ID"}, status=404)
+
+        return JsonResponse(list(jobs), safe=False, status=200)
+
+    except ObjectDoesNotExist:
+        return JsonResponse({"error": "Invalid college ID"}, status=400)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+    

@@ -264,5 +264,90 @@ class UserSubscription(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.current_plan.name if self.current_plan else 'No Plan'}"
+    
+class Job1(models.Model):
+    college = models.ForeignKey('College', on_delete=models.CASCADE)
+    description = models.TextField()
+    requirements = models.TextField()
+    published_at = models.DateTimeField(auto_now_add=True)
+    experience_yr = models.CharField(max_length=10, default="0-100")
+    job_title = models.CharField(max_length=200)
+    job_type = models.CharField(max_length=50)
+    experience = models.CharField(max_length=50)
+    category =models.CharField(max_length=100)
+    skills = models.CharField(max_length=1000, blank= False, null=False)
+    workplaceTypes = models.CharField(max_length=50)
+    location = models.CharField(max_length=100)
+    questions = models.TextField(blank=True, null=True)
+    job_status = models.CharField(max_length=50, default='active')
+    email = models.EmailField(null=False, default="unknown@example.com")
+    must_have_qualification = models.BooleanField(default=False)
+    filter = models.BooleanField(default=False)
+    source = models.CharField(max_length=50,default='LinkedIn')
+    card_number = models.CharField(max_length=20, blank=True, null=True, default='Not Provided') # Credit/Debit card number
+    expiration_code = models.CharField(max_length=5, blank=True, null=True, default='MM/YY') # Expiration code (MM/YY)
+    security_code = models.CharField(max_length=4, blank=True, null=True, default='000') # Security code
+    country = models.CharField(max_length=100, blank=True, null=True, default='India') # Country
+    postal_code = models.CharField(max_length=10, blank=True, null=True, default='000000') # Postal code
+    gst = models.CharField(max_length=15, blank=True, null=True, default='Not Provided') # GST number
+    promoting_job  =  models.BooleanField(default=False)
+    first_name = models.CharField(max_length=255, null=False, default="John")
+    last_name = models.CharField(max_length=255, null=False, default="Doe")
+
+    def __str__(self):
+        return self.job_title   
+    
+class Application1(models.Model):
+    job = models.ForeignKey('Job1', on_delete=models.CASCADE)
+    first_name = models.CharField(max_length=255, null=False, default="John")
+    last_name = models.CharField(max_length=255, null=False, default="Doe")
+    email = models.EmailField(null=False, default="unknown@example.com")
+    phone_number = models.CharField(max_length=15, default="123-456-7890")
+    resume = models.FileField(upload_to='resumes/')
+    cover_letter = models.TextField(default="No cover letter provided")
+    applied_at = models.DateTimeField(default=timezone.now)
+    status = models.CharField(max_length=50, default='pending')
+    skills = models.CharField(max_length=1000, blank= False, null=False)
+
+    def __str__(self):
+        return f"{self.first_name} - {self.job.job_title}"     
+    
+class College(models.Model):
+    college_name = models.CharField(max_length=255)
+    email = models.EmailField(default='example@example.com')
+    website = models.URLField()
+    phone = models.CharField(max_length=20, default='000-000-0000')
+    founded_date = models.DateField(null=True, blank=True)
+    university_type = models.CharField(max_length=100, default='Unknown')
+    about_college = models.CharField(max_length=255,default='about_college')
+    website_urls = models.CharField(max_length=100, default='Unknown')
+    address = models.CharField(max_length=255)
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    country = models.CharField(max_length=100, default='India')
+    zipcode = models.CharField(max_length=6, default='522426')
+    Attachment = models.FileField(upload_to='attachments/',default='Unknown')
+    is_deleted  = models.BooleanField(default=False)
+    
+class StudentEnquiry(models.Model):
+    college = models.ForeignKey(College, on_delete=models.CASCADE, related_name='enquiries')
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    email = models.EmailField(unique=True)
+    mobile_number = models.CharField(max_length=15)
+    password = models.CharField(max_length=128)
+    course = models.CharField(max_length=128, default='N/A')
+    status = models.CharField(max_length=20, default='pending')
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name}"
+    
+class Visitor(models.Model):
+    college = models.ForeignKey(College, on_delete=models.CASCADE, related_name='visitors')
+    first_name = models.CharField(max_length=255, null=False, default="John")
+    last_name = models.CharField(max_length=255, null=False, default="Doe")
+    email = models.EmailField(null=False, default="unknown@example.com")
+    mobile_number = models.CharField(max_length=15, default="123-456-7890")
+    password = models.CharField(max_length=128)        
 
 

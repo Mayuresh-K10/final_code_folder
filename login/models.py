@@ -1,4 +1,4 @@
-from django.contrib.auth.models import AbstractUser # type: ignore
+from django.contrib.auth.models import AbstractUser, User # type: ignore
 from django.db import models # type: ignore
 
 class CustomUser(AbstractUser):
@@ -39,6 +39,7 @@ class Meta:
     db_table="collegecuefinal_data"
 
 class CompanyInCharge(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default=1)    
     company_name = models.CharField(max_length=255,default="null")
     official_email = models.EmailField(unique=True,default="Null")
     country_code = models.CharField(max_length=3, default='+91')
@@ -49,6 +50,7 @@ class CompanyInCharge(models.Model):
     agreed_to_terms = models.BooleanField(default=False)
 
 class UniversityInCharge(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
     university_name = models.CharField(max_length=255)
     official_email = models.EmailField(unique=True,default="Null")
     country_code = models.CharField(max_length=3, default='+91')
@@ -59,6 +61,7 @@ class UniversityInCharge(models.Model):
     agreed_to_terms = models.BooleanField(default=False)
 
 class Consultant(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
     consultant_name = models.CharField(max_length=255,default="Null")
     official_email = models.EmailField(unique=True,default="Null")
     country_code = models.CharField(max_length=3, default='+91')

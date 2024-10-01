@@ -6,15 +6,17 @@ from django.views.decorators.csrf import csrf_exempt, csrf_protect # type: ignor
 from .utils import (send_data_to_google_sheet3,fetch_data_from_google_sheets,send_data_to_google_sheet4,
 send_data_to_google_sheet2,send_data_to_google_sheets)
 import secrets,json,requests,os # type: ignore
-from .models import new_user
+from .models import CompanyInCharge, Consultant, UniversityInCharge, new_user
 from django.contrib.auth.hashers import make_password, check_password # type: ignore
 from django.utils.decorators import method_decorator # type: ignore
 from django.views import View # type: ignore
-from .forms import (UniversityInChargeForm,CompanyInChargeForm,ForgotForm,
+from .forms import ( UniversityInChargeForm,CompanyInChargeForm,ForgotForm,
 LoginForm,SubscriptionForm1,ConsultantForm,Forgot2Form
 ,VerifyForm,SubscriptionForm)
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger # type: ignore
 from google.oauth2 import id_token # type: ignore
+from django.contrib.auth import authenticate
+from rest_framework.authtoken.models import Token
 
 CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 
@@ -857,4 +859,75 @@ class Subscriber_view1(View):
 #     else:
 #         return JsonResponse({'error': 'Invalid request method'}, status=400)
 
+@method_decorator(csrf_exempt, name='dispatch')
+class LoginCompanyInChargeView(View):
+    def post(self, request):
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            email = data.get('official_email')
+            password = data.get('password')
+
+            try:
+                company = CompanyInCharge.objects.get(official_email=email)
+            except CompanyInCharge.DoesNotExist:
+                return JsonResponse({'error': 'Company not found'}, status=404)
+
+            if check_password(password, company.password):
+                token, _ = Token.objects.get_or_create(user=company.user)
+                return JsonResponse({'success': True, 'token': token.key}, status=200)
+            else:
+                return JsonResponse({'error': 'Invalid credentials'}, status=400)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+        
+@method_decorator(csrf_exempt, name='dispatch')
+class LoginUniversityInChargeView(View):
+    def post(self, request):
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            email = data.get('official_email')
+            password = data.get('password')
+
+            try:
+                university = UniversityInCharge.objects.get(official_email=email)
+            except UniversityInCharge.DoesNotExist:
+                return JsonResponse({'error': 'University not found'}, status=404)
+
+            if check_password(password, university.password):
+                token, _ = Token.objects.get_or_create(user=university.user)
+                return JsonResponse({'success': True, 'token': token.key}, status=200)
+            else:
+                return JsonResponse({'error': 'Invalid credentials'}, status=400)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+        
+@method_decorator(csrf_exempt, name='dispatch')
+class LoginConsultantView(View):
+    def post(self, request):
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            email = data.get('official_email')
+            password = data.get('password')
+
+            try:
+                consultant = Consultant.objects.get(official_email=email)
+            except Consultant.DoesNotExist:
+                return JsonResponse({'error': 'Consultant not found'}, status=404)
+
+            if check_password(password, consultant.password):
+                token, _ = Token.objects.get_or_create(user=consultant.user)
+                return JsonResponse({'success': True, 'token': token.key}, status=200)
+            else:
+                return JsonResponse({'error': 'Invalid credentials'}, status=400)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)       
 

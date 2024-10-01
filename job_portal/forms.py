@@ -1,5 +1,5 @@
 from django import forms # type: ignore
-from .models import Achievements, Certification, Education, Experience, Job, Application, Company, MembershipPlan, Objective, Project, Publications, Reference, Resume, Student, Attachment, Message, UserSubscription
+from .models import Achievements, Application1, Certification, College, Education, Experience, Job, Application, Company, Job1, MembershipPlan, Objective, Project, Publications, Reference, Resume, Student, Attachment, Message, StudentEnquiry, UserSubscription, Visitor
 from django.utils import timezone
 
 class JobForm(forms.ModelForm):
@@ -121,6 +121,33 @@ class Membershipform(forms.ModelForm):
     class Meta:
         model = MembershipPlan
         fields = '__all__'
-
-
-
+        
+class Job1Form(forms.ModelForm):
+    class Meta:
+        model = Job1
+        fields = ['job_title', 'college', 'location', 'description',
+                   'requirements', 'job_type', 'experience', 'category',
+                     'skills', 'experience_yr', 'workplaceTypes','questions','job_status',
+                     'first_name', 'last_name', 'card_number', 'expiration_code', 'security_code',
+                     'country', 'postal_code' , 'gst','promoting_job' ]
+        widgets = {
+            'skills': forms.Textarea(attrs={'rows': 3}),
+        }  
+        
+class Application1Form(forms.ModelForm):
+    class Meta:
+        model = Application1
+        fields = ['first_name','last_name', 'email', 'phone_number', 'resume', 'cover_letter', 'skills']
+        widgets = {
+            'skills': forms.Textarea(attrs={'rows': 3}),
+        }              
+        
+class CollegeForm(forms.ModelForm):
+    class Meta:
+        model = College
+        fields = ['college_name', 'email','website','phone', 'founded_date', 'university_type','about_college', 'website_urls','address','city','state','country','zipcode','Attachment','is_deleted']
+        
+class VisitorRegistrationForm(forms.ModelForm):
+    class Meta:
+        model = Visitor
+        fields = ['first_name', 'last_name', 'email', 'mobile_number', 'password']

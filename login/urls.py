@@ -18,4 +18,7 @@ urlpatterns = [
     path('verify_otp1',views.Verify_view.as_view(),name="verify_otp1"),
     path('resend-otp/', views.resend_otp, name='resend_otp'),
     path('verify-token/', views.verify_token, name='verify_token'),
+    path('login/company/', views.LoginCompanyInChargeView.as_view(), name='login_company'),
+    path('login/university/', views.LoginUniversityInChargeView.as_view(), name='login_university'),
+    path('login/consultant/', views.LoginConsultantView.as_view(), name='login_consultant'),
 ]

@@ -1,6 +1,6 @@
 from django.urls import path # type: ignore
 from . import views
-from .views import  CustomObtainAuthToken,  CompanyListCreateView, CompanyDetailView
+from .views import  CollegeListCreateView, CustomObtainAuthToken,  CompanyListCreateView, CompanyDetailView
 
 urlpatterns = [
     path('home', views.home, name='home'),
@@ -49,5 +49,15 @@ urlpatterns = [
     path('choose-plan/', views.choose_plan, name='choose_plan'),
     path('cancel-plan/', views.cancel_plan, name='cancel_plan'),
     path('subscription/', views.subscription_detail, name='subscription_detail'),
+    path('colleges/', CollegeListCreateView.as_view(), name='college_list_create'),
+    path('submit-enquiry/<int:college_id>/', views.submit_enquiry, name='submit-enquiry'),
+    path('college_status_counts/', views.college_status_counts, name='submit-enquiry'),
+    path('college-create-job/', views.create_job_for_college, name='college-create-job'),
+    path('apply-college-job/<int:job_id>/', views.apply__college_job, name='apply-college-job'),
+    path('register-visitor/<int:college_id>/', views.register_visitor, name='register-visitor'),
+    path('login-visitor/', views.login_visitor, name='login-visitor'),
+    path('fetch-college-jobs/<int:college_id>/', views.college_jobs_api, name='fetch-college-jobs'),
+    path('fetch-student-enquiries/<int:college_id>/', views.student_enquiries, name='fetch-student-enquiries'),
+
 
 ]
