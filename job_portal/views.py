@@ -1970,7 +1970,7 @@ def register_visitor(request, college_id):
 #             return JsonResponse({'error': 'Invalid JSON'}, status=400)
 #         except Exception as e:
 #             return JsonResponse({'error': str(e)}, status=500)
-    
+
 #     else:
 #         return JsonResponse({'error': 'Invalid request method'}, status=405)
 
