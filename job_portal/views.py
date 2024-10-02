@@ -1726,7 +1726,7 @@ def submit_enquiry(request, college_id):
 #         total_visitor = Visitor.objects.filter(college_id=college_id).count()
 #         shortlisted_count = Application1.objects.filter(job__college_id=college_id, status='shortlisted').count()
 
-        
+
 #         return JsonResponse({
 #             'total_visitor_count' : total_visitor,
 #             'shortlisted_count': shortlisted_count,
