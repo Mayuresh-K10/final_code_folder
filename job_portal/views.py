@@ -1550,47 +1550,6 @@ def subscription_detail(request):
     except Exception as e:
         return JsonResponse({'error': 'An unexpected error occurred', 'details': str(e)}, status=500)
 
-# @method_decorator(csrf_exempt, name='dispatch')
-# class CollegeListCreateView(View):
-#     def get(self, request):
-#         try:
-#             colleges = list(College.objects.all().values())
-#             return JsonResponse(colleges, safe=False, status=200)
-#         except Exception as e:
-#             return JsonResponse({'error': str(e)}, status=500)
-
-#     def post(self, request):
-#         try:
-#             college_email = request.POST.get('email')
-#             if not college_email:
-#                 return JsonResponse({'status': 'error', 'message': 'Email is required'}, status=400)
-
-#             college = College.objects.filter(email=college_email).first()
-
-#             if college:
-#                 college_form = CollegeForm(request.POST, request.FILES, instance=college)
-#             else:
-#                 college_form = CollegeForm(request.POST, request.FILES)
-
-#             if college_form.is_valid():
-#                 college = college_form.save()
-
-#                 delete_attachment = request.POST.get('is_deleted', 'false').lower() == 'true'
-#                 if delete_attachment and college.Attachment:
-#                     if os.path.exists(college.Attachment.path):
-#                         os.remove(college.Attachment.path)
-#                     college.Attachment = None
-#                     college.save()
-
-#                     return JsonResponse({'status': 'success', 'message': 'Attachment deleted successfully', 'college_id': college.id}, status=200)
-
-#                 return JsonResponse({'status': 'success', 'message': 'College created successfully', 'college_id': college.id}, status=201)
-#             else:
-#                 return JsonResponse(college_form.errors, status=400)
-
-#         except Exception as e:
-#             return JsonResponse({'error': str(e)}, status=500)
-
 @method_decorator(csrf_exempt, name='dispatch')
 class CollegeListCreateView(View):
 
@@ -1628,48 +1587,6 @@ class CollegeListCreateView(View):
 
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
-
-# @csrf_exempt
-# def submit_enquiry(request, college_id):
-#     if request.method == 'POST':
-#         try:
-#             data = json.loads(request.body)
-#         except json.JSONDecodeError:
-#             return JsonResponse({'error': 'Invalid JSON'}, status=400)
-
-#         first_name = data.get('first_name')
-#         last_name = data.get('last_name')
-#         email = data.get('email')
-#         mobile_number = data.get('mobile_number')
-#         password = data.get('password')
-
-#         if not all([first_name, last_name, email, mobile_number, password]):
-#             return JsonResponse({'error': 'All fields are required'}, status=400)
-
-#         try:
-#             college = College.objects.get(id=college_id)
-#         except College.DoesNotExist:
-#             return JsonResponse({'error': 'Invalid college ID'}, status=400)
-
-#         if StudentEnquiry.objects.filter(email=email, college=college).exists():
-#             return JsonResponse({'error': 'An enquiry with this email has already been submitted for this college.'}, status=400)
-
-#         hashed_password = make_password(password)
-
-#         try:
-#             enquiry = StudentEnquiry.objects.create(
-#                 first_name=first_name,
-#                 last_name=last_name,
-#                 email=email,
-#                 mobile_number=mobile_number,
-#                 password=hashed_password,
-#                 college=college
-#             )
-#             return JsonResponse({'message': 'Enquiry submitted successfully','enquiry_id' : enquiry.id}, status=201)
-#         except IntegrityError:
-#             return JsonResponse({'error': 'Error while saving enquiry. Please try again.'}, status=400)
-
-#     return JsonResponse({'error': 'Invalid request method'}, status=405)
 
 @csrf_exempt
 def submit_enquiry(request, college_id):
@@ -1712,37 +1629,6 @@ def submit_enquiry(request, college_id):
         return JsonResponse({'message': 'Enquiry submitted successfully', 'enquiry_id': enquiry.id}, status=201)
     except IntegrityError:
         return JsonResponse({'error': 'Error while saving enquiry. Please try again.'}, status=400)
-
-# @csrf_exempt
-# def college_status_counts(request):
-#     try:
-#         college_id = request.GET.get('college_id')
-
-#         if not college_id:
-#             return JsonResponse({'error': 'college_id is required'}, status=400)
-
-#         enquiry_count = StudentEnquiry.objects.filter(college_id=college_id).count()
-#         job_posted = Job1.objects.filter(college_id=college_id).count()
-#         total_visitor = Visitor.objects.filter(college_id=college_id).count()
-#         shortlisted_count = Application1.objects.filter(job__college_id=college_id, status='shortlisted').count()
-
-
-#         return JsonResponse({
-#             'total_visitor_count' : total_visitor,
-#             'shortlisted_count': shortlisted_count,
-#             'job_posted_count' : job_posted,
-#             'enquiry_count': enquiry_count
-
-#         }, status=200)
-
-#     except ValueError:
-#         return JsonResponse({'error': 'Invalid college_id. It must be an integer.'}, status=400)
-
-#     except StudentEnquiry.DoesNotExist:
-#         return JsonResponse({'error': f'No enquiries found for College ID {college_id}'}, status=404)
-
-#     except Exception as e:
-#         return JsonResponse({'error': str(e)}, status=500)
 
 @csrf_exempt
 def college_status_counts(request):
@@ -1812,32 +1698,6 @@ def create_job_for_college(request):
 
     return JsonResponse({'error': 'Invalid request method. Use POST.'}, status=405)
 
-# @csrf_exempt
-# def apply__college_job(request, job_id):
-#     try:
-#         json_data = json.loads(request.POST.get('data'))
-#         job = get_object_or_404(Job1, id=job_id)
-#         if request.method == 'POST':
-#             form = Application1Form(json_data, request.FILES)
-#             if form.is_valid():
-#                 application = form.save(commit=False)
-#                 application.job = job
-#                 job_skills = set(job.skills.split(', '))
-#                 candidate_skills = set(application.skills.split(', '))
-#                 cand_skills = ', '.join(candidate_skills)
-#                 application.skills = cand_skills
-
-#                 if not job_skills.intersection(candidate_skills):
-#                     return JsonResponse({'message': 'Candidate is not eligible to apply'}, status=404)
-
-#                 application.save()
-#                 return JsonResponse({'message': 'Application submitted successfully', 'application_id': application.id}, status=201)
-#             return JsonResponse({'errors': form.errors}, status=400)
-#         else:
-#             return JsonResponse({'error': 'Method not allowed'}, status=405)
-#     except Exception as e:
-#         return JsonResponse({'error': str(e)}, status=500)
-
 @csrf_exempt
 def apply__college_job(request, job_id):
     if request.method != 'POST':
@@ -1876,46 +1736,6 @@ def apply__college_job(request, job_id):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-# @csrf_exempt
-# def register_visitor(request, college_id):
-#     if request.method == "POST":
-#         data = json.loads(request.body.decode('utf-8'))
-
-#         try:
-#             college = College.objects.get(id=college_id)
-#         except College.DoesNotExist:
-#             return JsonResponse({'error': 'Invalid college ID'}, status=400)
-
-#         email = data.get('email')
-
-#         try:
-#             if Visitor.objects.filter(email=email, college=college).exists():
-#                 return JsonResponse({'error': 'Visitor already registered'}, status=400)
-#         except Exception as e:
-#             return JsonResponse({'error': str(e)}, status=500)
-
-#         form = VisitorRegistrationForm(data=data)
-
-#         try:
-#             if form.is_valid():
-#                 visitor = form.save(commit=False)
-
-#                 password = data.get('password')
-#                 hashed_password = make_password(password)
-#                 visitor.password = hashed_password
-#                 visitor.college = college
-
-#                 visitor.save()
-
-#                 return JsonResponse({'message': 'Visitor registered successfully'}, status=201)
-#             else:
-#                 return JsonResponse({'error': form.errors}, status=400)
-#         except Exception as e:
-#             return JsonResponse({'error': str(e)}, status=500)
-
-#     else:
-#         return JsonResponse({'error': 'Invalid request method'}, status=405)
-
 @csrf_exempt
 def register_visitor(request, college_id):
     if request.method != "POST":
@@ -1947,33 +1767,6 @@ def register_visitor(request, college_id):
         return JsonResponse({'error': 'Invalid JSON format'}, status=400)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-
-# @csrf_exempt
-# def login_visitor(request):
-#     if request.method == "POST":
-#         try:
-#             data = json.loads(request.body.decode('utf-8'))
-#             email = data.get('email')
-#             password = data.get('password')
-
-#             try:
-#                 visitor = Visitor.objects.get(email=email)
-#             except Visitor.DoesNotExist:
-#                 return JsonResponse({'error': 'Visitor not found'}, status=404)
-
-#             if check_password(password, visitor.password):
-#                 return JsonResponse({'message': 'Login successful'}, status=200)
-#             else:
-#                 return JsonResponse({'error': 'Invalid credentials'}, status=400)
-
-#         except json.JSONDecodeError:
-#             return JsonResponse({'error': 'Invalid JSON'}, status=400)
-#         except Exception as e:
-#             return JsonResponse({'error': str(e)}, status=500)
-
-#     else:
-#         return JsonResponse({'error': 'Invalid request method'}, status=405)
-
 
 @csrf_exempt
 def login_visitor(request):
