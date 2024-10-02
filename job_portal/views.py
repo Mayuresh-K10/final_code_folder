@@ -1732,7 +1732,7 @@ def submit_enquiry(request, college_id):
 #             'shortlisted_count': shortlisted_count,
 #             'job_posted_count' : job_posted,
 #             'enquiry_count': enquiry_count
-            
+
 #         }, status=200)
 
 #     except ValueError:
@@ -1747,10 +1747,10 @@ def submit_enquiry(request, college_id):
 @csrf_exempt
 def college_status_counts(request):
     college_id = request.GET.get('college_id')
-    
+
     if not college_id:
         return JsonResponse({'error': 'college_id is required'}, status=400)
-    
+
     try:
         college_id = int(college_id)
     except ValueError:
@@ -2031,4 +2031,3 @@ def student_enquiries(request, college_id):
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
-    
