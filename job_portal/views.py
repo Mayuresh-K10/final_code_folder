@@ -1899,7 +1899,7 @@ def apply__college_job(request, job_id):
 #         try:
 #             if form.is_valid():
 #                 visitor = form.save(commit=False)
-                
+
 #                 password = data.get('password')
 #                 hashed_password = make_password(password)
 #                 visitor.password = hashed_password
