@@ -1904,7 +1904,7 @@ def apply__college_job(request, job_id):
 #                 hashed_password = make_password(password)
 #                 visitor.password = hashed_password
 #                 visitor.college = college
-                
+
 #                 visitor.save()
 
 #                 return JsonResponse({'message': 'Visitor registered successfully'}, status=201)
