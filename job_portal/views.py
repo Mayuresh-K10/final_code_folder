@@ -1628,7 +1628,7 @@ class CollegeListCreateView(View):
 
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
-        
+
 # @csrf_exempt
 # def submit_enquiry(request, college_id):
 #     if request.method == 'POST':
@@ -1952,7 +1952,7 @@ def register_visitor(request, college_id):
 # def login_visitor(request):
 #     if request.method == "POST":
 #         try:
-#             data = json.loads(request.body.decode('utf-8'))  
+#             data = json.loads(request.body.decode('utf-8'))
 #             email = data.get('email')
 #             password = data.get('password')
 
@@ -2016,7 +2016,7 @@ def college_jobs_api(request, college_id):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
-@csrf_exempt    
+@csrf_exempt
 def student_enquiries(request, college_id):
     try:
         jobs = StudentEnquiry.objects.filter(college_id=college_id).values('first_name','last_name','course','status')

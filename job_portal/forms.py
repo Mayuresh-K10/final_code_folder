@@ -140,13 +140,13 @@ class Application1Form(forms.ModelForm):
         fields = ['first_name','last_name', 'email', 'phone_number', 'resume', 'cover_letter', 'skills']
         widgets = {
             'skills': forms.Textarea(attrs={'rows': 3}),
-        }              
-        
+        }
+
 class CollegeForm(forms.ModelForm):
     class Meta:
         model = College
         fields = ['college_name', 'email','website','phone', 'founded_date', 'university_type','about_college', 'website_urls','address','city','state','country','zipcode','Attachment','is_deleted']
-        
+
 class VisitorRegistrationForm(forms.ModelForm):
     class Meta:
         model = Visitor
