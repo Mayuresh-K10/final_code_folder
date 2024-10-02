@@ -1887,7 +1887,7 @@ def apply__college_job(request, job_id):
 #             return JsonResponse({'error': 'Invalid college ID'}, status=400)
 
 #         email = data.get('email')
-        
+
 #         try:
 #             if Visitor.objects.filter(email=email, college=college).exists():
 #                 return JsonResponse({'error': 'Visitor already registered'}, status=400)
