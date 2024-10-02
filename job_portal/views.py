@@ -2,7 +2,7 @@ from django.db import DatabaseError, IntegrityError, OperationalError, transacti
 from django.shortcuts import get_object_or_404 # type: ignore
 from django.http import JsonResponse # type: ignore
 from django.middleware.csrf import get_token # type: ignore
-from django.views.decorators.csrf import csrf_exempt, csrf_protect # type: ignore
+from django.views.decorators.csrf import csrf_exempt # type: ignore
 from django.utils import timezone # type: ignore
 from django.db.models import Q # type: ignore
 from rest_framework.response import Response # type: ignore
@@ -22,7 +22,6 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
-from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import check_password
 
 def home(request):
@@ -1550,7 +1549,7 @@ def subscription_detail(request):
         return JsonResponse({'error': 'Database error occurred', 'details': str(db_err)}, status=500)
     except Exception as e:
         return JsonResponse({'error': 'An unexpected error occurred', 'details': str(e)}, status=500)
-    
+
 # @method_decorator(csrf_exempt, name='dispatch')
 # class CollegeListCreateView(View):
 #     def get(self, request):
@@ -1664,7 +1663,7 @@ class CollegeListCreateView(View):
 #                 email=email,
 #                 mobile_number=mobile_number,
 #                 password=hashed_password,
-#                 college=college  
+#                 college=college
 #             )
 #             return JsonResponse({'message': 'Enquiry submitted successfully','enquiry_id' : enquiry.id}, status=201)
 #         except IntegrityError:
@@ -1791,8 +1790,8 @@ def create_job_for_college(request):
             form = Job1Form(data)
             if form.is_valid():
                 jobs = form.save(commit=False)
-                jobs.college = college  
-                jobs.save()  
+                jobs.college = college
+                jobs.save()
 
                 promoting_job = data.get('promoting_job', '').lower()
                 if promoting_job == 'true':
@@ -1880,7 +1879,7 @@ def apply__college_job(request, job_id):
 # @csrf_exempt
 # def register_visitor(request, college_id):
 #     if request.method == "POST":
-#         data = json.loads(request.body.decode('utf-8'))  
+#         data = json.loads(request.body.decode('utf-8'))
 
 #         try:
 #             college = College.objects.get(id=college_id)
@@ -1904,9 +1903,9 @@ def apply__college_job(request, job_id):
 #                 password = data.get('password')
 #                 hashed_password = make_password(password)
 #                 visitor.password = hashed_password
-#                 visitor.college = college 
+#                 visitor.college = college
                 
-#                 visitor.save() 
+#                 visitor.save()
 
 #                 return JsonResponse({'message': 'Visitor registered successfully'}, status=201)
 #             else:
@@ -2001,7 +2000,7 @@ def login_visitor(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-@csrf_exempt    
+@csrf_exempt
 def college_jobs_api(request, college_id):
     try:
         jobs = Job1.objects.filter(college_id=college_id).values('job_title', 'location', 'job_status')

@@ -1,5 +1,5 @@
 from django import forms # type: ignore
-from .models import Achievements, Application1, Certification, College, Education, Experience, Job, Application, Company, Job1, MembershipPlan, Objective, Project, Publications, Reference, Resume, Student, Attachment, Message, StudentEnquiry, UserSubscription, Visitor
+from .models import Achievements, Application1, Certification, College, Education, Experience, Job, Application, Company, Job1, MembershipPlan, Objective, Project, Publications, Reference, Resume, Student, Attachment, Message,UserSubscription, Visitor
 from django.utils import timezone
 
 class JobForm(forms.ModelForm):
@@ -121,7 +121,7 @@ class Membershipform(forms.ModelForm):
     class Meta:
         model = MembershipPlan
         fields = '__all__'
-        
+
 class Job1Form(forms.ModelForm):
     class Meta:
         model = Job1
@@ -132,8 +132,8 @@ class Job1Form(forms.ModelForm):
                      'country', 'postal_code' , 'gst','promoting_job' ]
         widgets = {
             'skills': forms.Textarea(attrs={'rows': 3}),
-        }  
-        
+        }
+
 class Application1Form(forms.ModelForm):
     class Meta:
         model = Application1

@@ -264,7 +264,7 @@ class UserSubscription(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.current_plan.name if self.current_plan else 'No Plan'}"
-    
+
 class Job1(models.Model):
     college = models.ForeignKey('College', on_delete=models.CASCADE)
     description = models.TextField()
@@ -295,8 +295,8 @@ class Job1(models.Model):
     last_name = models.CharField(max_length=255, null=False, default="Doe")
 
     def __str__(self):
-        return self.job_title   
-    
+        return self.job_title
+
 class Application1(models.Model):
     job = models.ForeignKey('Job1', on_delete=models.CASCADE)
     first_name = models.CharField(max_length=255, null=False, default="John")
@@ -310,8 +310,8 @@ class Application1(models.Model):
     skills = models.CharField(max_length=1000, blank= False, null=False)
 
     def __str__(self):
-        return f"{self.first_name} - {self.job.job_title}"     
-    
+        return f"{self.first_name} - {self.job.job_title}"
+
 class College(models.Model):
     college_name = models.CharField(max_length=255)
     email = models.EmailField(default='example@example.com')
@@ -328,7 +328,7 @@ class College(models.Model):
     zipcode = models.CharField(max_length=6, default='522426')
     Attachment = models.FileField(upload_to='attachments/',default='Unknown')
     is_deleted  = models.BooleanField(default=False)
-    
+
 class StudentEnquiry(models.Model):
     college = models.ForeignKey(College, on_delete=models.CASCADE, related_name='enquiries')
     first_name = models.CharField(max_length=50)
@@ -341,13 +341,13 @@ class StudentEnquiry(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
-    
+
 class Visitor(models.Model):
     college = models.ForeignKey(College, on_delete=models.CASCADE, related_name='visitors')
     first_name = models.CharField(max_length=255, null=False, default="John")
     last_name = models.CharField(max_length=255, null=False, default="Doe")
     email = models.EmailField(null=False, default="unknown@example.com")
     mobile_number = models.CharField(max_length=15, default="123-456-7890")
-    password = models.CharField(max_length=128)        
+    password = models.CharField(max_length=128)
 
 

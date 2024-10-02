@@ -15,7 +15,6 @@ LoginForm,SubscriptionForm1,ConsultantForm,Forgot2Form
 ,VerifyForm,SubscriptionForm)
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger # type: ignore
 from google.oauth2 import id_token # type: ignore
-from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 
 CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
@@ -882,7 +881,7 @@ class LoginCompanyInChargeView(View):
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
-        
+
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginUniversityInChargeView(View):
     def post(self, request):
@@ -906,7 +905,7 @@ class LoginUniversityInChargeView(View):
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
-        
+
 @method_decorator(csrf_exempt, name='dispatch')
 class LoginConsultantView(View):
     def post(self, request):
@@ -929,5 +928,5 @@ class LoginConsultantView(View):
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)       
+            return JsonResponse({'error': str(e)}, status=500)
 
