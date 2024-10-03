@@ -58,6 +58,8 @@ urlpatterns = [
     path('login-visitor/', views.login_visitor, name='login-visitor'),
     path('fetch-college-jobs/<int:college_id>/', views.college_jobs_api, name='fetch-college-jobs'),
     path('fetch-student-enquiries/<int:college_id>/', views.student_enquiries, name='fetch-student-enquiries'),
+    path('jobs-by-college/', views.jobs_by_college, name='jobs-by-college'),
+
 
 
 ]

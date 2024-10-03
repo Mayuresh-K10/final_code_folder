@@ -1641,6 +1641,11 @@ def college_status_counts(request):
         college_id = int(college_id)
     except ValueError:
         return JsonResponse({'error': 'Invalid college_id. It must be an integer.'}, status=400)
+    
+    try:
+        college = College.objects.get(id=college_id)
+    except College.DoesNotExist:
+        return JsonResponse({'error': 'College not found'}, status=404)
 
     try:
         enquiry_count = StudentEnquiry.objects.filter(college_id=college_id).count()
@@ -1824,3 +1829,54 @@ def student_enquiries(request, college_id):
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+@csrf_exempt
+def jobs_by_college(request):
+    try:
+        college_id = request.GET.get('college_id')
+        sort_order = request.GET.get('sort_order')
+        job_status = request.GET.get('job_status')
+
+        if not (college_id or sort_order or job_status):
+            return JsonResponse({'error': 'Select at least one parameter'}, status=400)
+
+        if college_id:
+            college = get_object_or_404(College, id=college_id)
+            jobs = Job1.objects.filter(college=college)
+        else:
+            jobs = Job1.objects.all()
+
+        if job_status:
+         if job_status:
+            if job_status.lower() == 'active':
+                jobs = jobs.filter(job_status='active')
+            elif job_status.lower() == 'closed':
+                jobs = jobs.filter(job_status='closed')
+            else:
+                return JsonResponse({'error': 'Invalid job status'}, status=400)
+
+        if sort_order:
+            if sort_order == 'latest':
+                jobs = jobs.order_by('-published_at')
+            elif sort_order == 'oldest':
+                jobs = jobs.order_by('published_at')
+            else:
+                return JsonResponse({'error': 'Invalid sort order'}, status=400)
+
+        jobs_list = [{
+            'id': job.id,
+            'job_title': job.job_title,
+            'location': job.location,
+            'description': job.description,
+            'requirements': job.requirements,
+            'job_type': job.job_type,
+            'experience': job.experience,
+            'category': job.category,
+            'published_at': job.published_at,
+            'status': job.job_status
+        } for job in jobs]
+
+        return JsonResponse(jobs_list, safe=False, status=200)
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
