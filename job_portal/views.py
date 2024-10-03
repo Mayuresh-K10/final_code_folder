@@ -1641,7 +1641,7 @@ def college_status_counts(request):
         college_id = int(college_id)
     except ValueError:
         return JsonResponse({'error': 'Invalid college_id. It must be an integer.'}, status=400)
-    
+
     if not College.objects.filter(id=college_id).exists():
        return JsonResponse({'error': 'College not found'}, status=404)
 
