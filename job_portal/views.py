@@ -1838,28 +1838,24 @@ def jobs_by_college(request):
         if not (college_id or sort_order or job_status):
             return JsonResponse({'error': 'Select at least one parameter'}, status=400)
 
+        jobs = Job1.objects.all()
+
         if college_id:
             college = get_object_or_404(College, id=college_id)
-            jobs = Job1.objects.filter(college=college)
-        else:
-            jobs = Job1.objects.all()
+            jobs = jobs.filter(college=college)
 
         if job_status:
-         if job_status:
-            if job_status.lower() == 'active':
-                jobs = jobs.filter(job_status='active')
-            elif job_status.lower() == 'closed':
-                jobs = jobs.filter(job_status='closed')
+            job_status = job_status.lower()
+            if job_status in ['active', 'closed']:
+                jobs = jobs.filter(job_status=job_status)
             else:
                 return JsonResponse({'error': 'Invalid job status'}, status=400)
 
-        if sort_order:
-            if sort_order == 'latest':
-                jobs = jobs.order_by('-published_at')
-            elif sort_order == 'oldest':
-                jobs = jobs.order_by('published_at')
-            else:
-                return JsonResponse({'error': 'Invalid sort order'}, status=400)
+        if sort_order in ['latest', 'oldest']:
+            order = '-published_at' if sort_order == 'latest' else 'published_at'
+            jobs = jobs.order_by(order)
+        elif sort_order:
+            return JsonResponse({'error': 'Invalid sort order'}, status=400)
 
         jobs_list = [{
             'id': job.id,
