@@ -91,13 +91,13 @@ class Subscriber1(models.Model):
     email = models.EmailField(unique=True)
     subscribed_at = models.DateTimeField(auto_now_add=True)
 
-class User(models.Model):
-    google_id = models.CharField(max_length=255, unique=True)
-    email = models.EmailField(unique=True)
-    name = models.CharField(max_length=255)
-    picture = models.URLField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+# class User(models.Model):
+#     google_id = models.CharField(max_length=255, unique=True)
+#     email = models.EmailField(unique=True)
+#     name = models.CharField(max_length=255)
+#     picture = models.URLField(blank=True, null=True)
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
-      return self.email
+#     def __str__(self):
+#       return self.email

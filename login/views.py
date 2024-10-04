@@ -449,6 +449,78 @@ class Subscriber_view1(View):
         except Exception as e:
             return JsonResponse({'success': False, 'errors': str(e)}, status=500)
 
+@method_decorator(csrf_exempt, name='dispatch')
+class LoginCompanyInChargeView(View):
+    def post(self, request):
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            email = data.get('official_email')
+            password = data.get('password')
+
+            try:
+                company = CompanyInCharge.objects.get(official_email=email)
+            except CompanyInCharge.DoesNotExist:
+                return JsonResponse({'error': 'Company not found'}, status=404)
+
+            if check_password(password, company.password):
+                token, _ = Token.objects.get_or_create(user=company.user)
+                return JsonResponse({'success': True, 'token': token.key}, status=200)
+            else:
+                return JsonResponse({'error': 'Invalid credentials'}, status=400)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class LoginUniversityInChargeView(View):
+    def post(self, request):
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            email = data.get('official_email')
+            password = data.get('password')
+
+            try:
+                university = UniversityInCharge.objects.get(official_email=email)
+            except UniversityInCharge.DoesNotExist:
+                return JsonResponse({'error': 'University not found'}, status=404)
+
+            if check_password(password, university.password):
+                token, _ = Token.objects.get_or_create(user=university.user)
+                return JsonResponse({'success': True, 'token': token.key}, status=200)
+            else:
+                return JsonResponse({'error': 'Invalid credentials'}, status=400)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class LoginConsultantView(View):
+    def post(self, request):
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            email = data.get('official_email')
+            password = data.get('password')
+
+            try:
+                consultant = Consultant.objects.get(official_email=email)
+            except Consultant.DoesNotExist:
+                return JsonResponse({'error': 'Consultant not found'}, status=404)
+
+            if check_password(password, consultant.password):
+                token, _ = Token.objects.get_or_create(user=consultant.user)
+                return JsonResponse({'success': True, 'token': token.key}, status=200)
+            else:
+                return JsonResponse({'error': 'Invalid credentials'}, status=400)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
 # CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 
 # def home(request):
@@ -857,76 +929,3 @@ class Subscriber_view1(View):
 #             return JsonResponse({'error': 'Invalid token'}, status=400)
 #     else:
 #         return JsonResponse({'error': 'Invalid request method'}, status=400)
-
-@method_decorator(csrf_exempt, name='dispatch')
-class LoginCompanyInChargeView(View):
-    def post(self, request):
-        try:
-            data = json.loads(request.body.decode('utf-8'))
-            email = data.get('official_email')
-            password = data.get('password')
-
-            try:
-                company = CompanyInCharge.objects.get(official_email=email)
-            except CompanyInCharge.DoesNotExist:
-                return JsonResponse({'error': 'Company not found'}, status=404)
-
-            if check_password(password, company.password):
-                token, _ = Token.objects.get_or_create(user=company.user)
-                return JsonResponse({'success': True, 'token': token.key}, status=200)
-            else:
-                return JsonResponse({'error': 'Invalid credentials'}, status=400)
-
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON'}, status=400)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-
-@method_decorator(csrf_exempt, name='dispatch')
-class LoginUniversityInChargeView(View):
-    def post(self, request):
-        try:
-            data = json.loads(request.body.decode('utf-8'))
-            email = data.get('official_email')
-            password = data.get('password')
-
-            try:
-                university = UniversityInCharge.objects.get(official_email=email)
-            except UniversityInCharge.DoesNotExist:
-                return JsonResponse({'error': 'University not found'}, status=404)
-
-            if check_password(password, university.password):
-                token, _ = Token.objects.get_or_create(user=university.user)
-                return JsonResponse({'success': True, 'token': token.key}, status=200)
-            else:
-                return JsonResponse({'error': 'Invalid credentials'}, status=400)
-
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON'}, status=400)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-
-@method_decorator(csrf_exempt, name='dispatch')
-class LoginConsultantView(View):
-    def post(self, request):
-        try:
-            data = json.loads(request.body.decode('utf-8'))
-            email = data.get('official_email')
-            password = data.get('password')
-
-            try:
-                consultant = Consultant.objects.get(official_email=email)
-            except Consultant.DoesNotExist:
-                return JsonResponse({'error': 'Consultant not found'}, status=404)
-
-            if check_password(password, consultant.password):
-                token, _ = Token.objects.get_or_create(user=consultant.user)
-                return JsonResponse({'success': True, 'token': token.key}, status=200)
-            else:
-                return JsonResponse({'error': 'Invalid credentials'}, status=400)
-
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON'}, status=400)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-
